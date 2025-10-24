@@ -41,7 +41,7 @@ fun SettingsScreen( // TODO: add navigation function back to home as param
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = Color.Blue)
+                .background(color = MaterialTheme.colorScheme.primary)
                 .padding(24.dp)
         )
 
