@@ -33,12 +33,15 @@ import androidx.compose.ui.unit.sp
 import com.cs407.whaap_it.R
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.cs407.whaap_it.ui.viewModels.SettingsState
+import com.cs407.whaap_it.ui.viewModels.SettingsViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 /**
  * The settings page is where the app settings can be configured
  */
 @Composable
 fun SettingsScreen( // TODO: add navigation function back to home as param
+    viewModel: SettingsViewModel = viewModel()
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
