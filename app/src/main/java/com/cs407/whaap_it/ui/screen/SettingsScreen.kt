@@ -1,10 +1,15 @@
 package com.cs407.whaap_it.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +43,7 @@ fun SettingsScreen( // TODO: add navigation function back to home as param
             text = stringResource(id = R.string.settings_page_title),
             style = MaterialTheme.typography.headlineMedium,
             color = Color.White,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -46,6 +52,7 @@ fun SettingsScreen( // TODO: add navigation function back to home as param
         )
 
         // TODO: Create an ElevatedCard to hold all the toggle buttons, etc.
+        Cardfolio()
     }
 
 }
@@ -55,5 +62,27 @@ fun SettingsScreen( // TODO: add navigation function back to home as param
 fun SettingsScreenPreview() {
     WhaapitTheme {
         SettingsScreen()
+    }
+}
+
+@Composable
+fun Cardfolio() {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+    ){
+        ElevatedCard(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ){
+
+        }
     }
 }
