@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.whaap_it.R
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
+import com.cs407.whaap_it.ui.viewModels.SettingsState
 
 /**
  * The settings page is where the app settings can be configured
@@ -107,7 +108,7 @@ fun Cardfolio() {
 @Composable
 fun SettingsTab() {
     // TODO: fix data class, toggle logic
-    var settings by remember { mutableStateOf(AppSettings()) }
+    var settings by remember { mutableStateOf(SettingsState()) }
 
     LazyColumn( // Vertical scroll container
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -164,28 +165,6 @@ fun SettingsToggleRow(
         )
     }
 }
-
-/**
- * Holds the toggle state of each game settings option
- */
-data class AppSettings(
-    // Game Settings
-    val enableShake: Boolean = true, // Accelerometer
-    val enableFlip: Boolean = true, // Gyroscope
-    val useMicrophone: Boolean = true, // Microphone
-    val hapticFeedback: Boolean = true, // Vibrations
-    val pinchGesture: Boolean = true, // Pinch Gesture
-    val swipeGesture: Boolean = true, // Swipe Gesture
-    val doubleTap: Boolean = true, // Double Tap Gesture
-    val longPress: Boolean = true, // Long Press
-
-    // Audio/Music Settings
-    val enableMusic: Boolean = true,
-    var musicVolume: Int = 50,
-    var appVolume: Int = 50,
-    val groovyMode: Boolean = false, // A very different music track
-
-    )
 
 data class ToggleItem(
     val title: String,
