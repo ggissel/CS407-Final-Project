@@ -1,5 +1,6 @@
 package com.cs407.whaap_it.ui.viewModels
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -28,54 +29,54 @@ data class SettingsState(
 )
 
 class SettingsViewModel : ViewModel() {
-    var settingsState by mutableStateOf(SettingsState())
-        private set
+    private val _settingsState = mutableStateOf(SettingsState())
+    val settingsState: MutableState<SettingsState> = _settingsState
 
     fun toggleFlip(enabled: Boolean) {
-        settingsState = settingsState.copy(enableFlip = enabled)
+        _settingsState.value = _settingsState.value.copy(enableFlip = enabled)
     }
 
     fun toggleMic(enabled: Boolean) {
-        settingsState = settingsState.copy(useMicrophone = enabled)
+        _settingsState.value = _settingsState.value.copy(useMicrophone = enabled)
     }
 
     fun toggleHaptic(enabled: Boolean) {
-        settingsState = settingsState.copy(hapticFeedback = enabled)
+        _settingsState.value = _settingsState.value.copy(hapticFeedback = enabled)
     }
 
     fun togglePinch(enabled: Boolean) {
-        settingsState = settingsState.copy(pinchGesture = enabled)
+        _settingsState.value = _settingsState.value.copy(pinchGesture = enabled)
     }
 
     fun toggleSwipe(enabled: Boolean) {
-        settingsState = settingsState.copy(swipeGesture = enabled)
+        _settingsState.value = _settingsState.value.copy(swipeGesture = enabled)
     }
 
     fun toggleDoubleTap(enabled: Boolean) {
-        settingsState = settingsState.copy(doubleTap = enabled)
+        _settingsState.value = _settingsState.value.copy(doubleTap = enabled)
     }
 
     fun toggleLongPress(enabled: Boolean) {
-        settingsState = settingsState.copy(longPress = enabled)
+        _settingsState.value = _settingsState.value.copy(longPress = enabled)
     }
 
     fun toggleShake(enabled: Boolean) {
-        settingsState = settingsState.copy(enableShake = enabled)
+        _settingsState.value = _settingsState.value.copy(enableShake = enabled)
     }
 
     fun toggleMusic(enabled: Boolean) {
-        settingsState = settingsState.copy(enableMusic = enabled)
+        _settingsState.value = _settingsState.value.copy(enableMusic = enabled)
     }
 
     fun toggleGroovy(enabled: Boolean) {
-        settingsState = settingsState.copy(groovyMode = enabled)
+        _settingsState.value = _settingsState.value.copy(groovyMode = enabled)
     }
 
     fun setMusicVolume(volume: Float) {
-        settingsState = settingsState.copy(musicVolume = volume)
+        _settingsState.value = _settingsState.value.copy(musicVolume = volume)
     }
 
     fun setAppVolume(volume: Float) {
-        settingsState = settingsState.copy(appVolume = volume)
+        _settingsState.value = _settingsState.value.copy(appVolume = volume)
     }
 }

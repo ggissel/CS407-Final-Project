@@ -18,6 +18,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.cs407.whaap_it.ui.screen.SettingsScreen
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
 
 class MainActivity : ComponentActivity() {
@@ -27,8 +31,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             WhaapitTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    StartScreen(
-                        modifier = Modifier.padding(innerPadding)
+                    AppNavigation(
+                        modifier = Modifier
+                            .padding(innerPadding)
                     )
                 }
             }
@@ -37,7 +42,39 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun StartScreen(modifier: Modifier = Modifier) {
+fun AppNavigation(
+    modifier: Modifier = Modifier
+) {
+    // Creates and remembers a NavController to manage navigation state
+    val navController = rememberNavController()
+
+    // NavHost sets up the navigation graph for the app
+    NavHost(
+        navController = navController,
+        startDestination = "home"
+    ) {
+        // Controller that handles navigation
+        // First screen to display when app starts
+        // Defines the "home" route and what UI to display there
+        composable("home") {
+            StartScreen(
+                onNavigateToSettings = { navController.navigate("settings") },
+            ) // Displays the HomeScreen composable
+        }
+        composable("settings") {
+            SettingsScreen(
+                onNavigateToHome = { navController.navigate("home") }
+            )
+        }
+
+
+    }
+}
+
+@Composable
+fun StartScreen(
+    onNavigateToSettings: () -> Unit = {},
+    modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -97,7 +134,7 @@ fun StartScreen(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedButton(
-            onClick = { /* TODO: Navigate to settings screen */ },
+            onClick = { onNavigateToSettings() },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)

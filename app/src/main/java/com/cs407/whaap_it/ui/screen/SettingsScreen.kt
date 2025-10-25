@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
@@ -24,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.whaap_it.R
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
-import com.cs407.whaap_it.ui.viewModels.SettingsState
 import com.cs407.whaap_it.ui.viewModels.SettingsViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 
@@ -46,8 +43,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
  * The settings page is where the app settings can be configured
  */
 @Composable
-fun SettingsScreen( // TODO: add navigation function back to home as param
-    viewModel: SettingsViewModel = viewModel()
+fun SettingsScreen(
+    viewModel: SettingsViewModel = viewModel(),
+    onNavigateToHome: () -> Unit = {}
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -91,7 +89,7 @@ fun SettingsScreenPreview() {
 fun Cardfolio(
     viewModel: SettingsViewModel = viewModel()
 ) {
-    var settings by remember { mutableStateOf(SettingsState()) }
+    var settings by viewModel.settingsState
     val gameplaySettings = listOf(
         SettingItem.ToggleItem(
             title = "Shake Feature",
@@ -133,12 +131,6 @@ fun Cardfolio(
             isChecked = settings.longPress,
             onToggleChange = { enabled -> viewModel.toggleLongPress(enabled) }
         ),
-        SettingItem.SliderItem(
-            title = "Music",
-            value = settings.musicVolume,
-            valueRange = 0f..1f,
-            onValueChange = { volume -> viewModel.setMusicVolume(volume) }
-        )
     )
 
     val musicAudioSettings = listOf(
@@ -266,7 +258,7 @@ fun SettingsToggleRow(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxSize()
-            .padding(36.dp)
+            .padding(vertical = 24.dp, horizontal = 32.dp)
     ) {
         Text(
             text = title,
@@ -309,7 +301,7 @@ fun SettingsSliderRow(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
             )
-            Slider(
+            Slider( // TODO: change slider style
                 value = value,
                 valueRange = valueRange,
                 onValueChange = onValueChange
