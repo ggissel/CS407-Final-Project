@@ -18,9 +18,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -138,6 +141,40 @@ fun Cardfolio(
         )
     )
 
+    val musicAudioSettings = listOf(
+        SettingItem.ToggleItem(
+            title = "Toggle Music",
+            isChecked = settings.enableMusic,
+            onToggleChange = { enabled -> viewModel.toggleMusic(enabled) }
+        ),
+        SettingItem.SliderItem(
+            title = "Music Volume",
+            value = settings.musicVolume,
+            valueRange = 0f..1f,
+            onValueChange = { volume -> viewModel.setMusicVolume(volume) }
+        ),
+        SettingItem.SliderItem(
+            title = "App Volume",
+            value = settings.appVolume,
+            valueRange = 0f..1f,
+            onValueChange = { volume -> viewModel.setAppVolume(volume) }
+        ),
+        SettingItem.ToggleItem(
+            title = "Groovy Mode",
+            isChecked = settings.groovyMode,
+            onToggleChange = { enabled -> viewModel.toggleGroovy(enabled) }
+        ),
+    )
+
+    val tabItems = listOf(
+        TabItem(
+            title = "Gameplay"
+        ),
+        TabItem(
+            title = "Music / Audio"
+        ),
+    )
+
     Box( // Container
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -153,12 +190,39 @@ fun Cardfolio(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         ){
-            // TODO: add Tabs to navigate to different settings type
-            SettingsTab(gameplaySettings)
+            var selectedTabIndex by remember { mutableIntStateOf(0) }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                // Different Tab Settings
+                TabRow(
+                    selectedTabIndex = selectedTabIndex,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                ) {
+                    tabItems.forEachIndexed { index, item ->
+                        Tab(
+                            selected = index == selectedTabIndex,
+                            onClick = { selectedTabIndex = index },
+                            text = {
+                                Text(text = item.title)
+                            }
+                        )
+                    }
+                }
+                if (selectedTabIndex == 0) { // Select Gameplay Tab
+                    SettingsTab(gameplaySettings)
+                } else if (selectedTabIndex == 1) { // Select Music/Audio Tab
+                    SettingsTab(musicAudioSettings)
+                }
+            }
         }
     }
 }
 
+/**
+ * The LazyColumn of Settings options displayed
+ */
 @Composable
 fun SettingsTab(
     settingsType: List<SettingItem>
@@ -268,3 +332,7 @@ sealed class SettingItem {
         val onValueChange: (Float) -> Unit
     ) : SettingItem()
 }
+
+data class TabItem(
+    val title: String
+)
