@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -62,7 +64,7 @@ fun SettingsScreen( // TODO: add navigation function back to home as param
                 .padding(24.dp)
         )
 
-        Cardfolio()
+        Cardfolio(viewModel)
     }
 
 }
@@ -82,7 +84,28 @@ fun SettingsScreenPreview() {
  * This is the visual Card container that houses the settings options
  */
 @Composable
-fun Cardfolio() {
+fun Cardfolio(
+    viewModel: SettingsViewModel = viewModel()
+) {
+    var settings by remember { mutableStateOf(SettingsState()) }
+    val gameplaySettings = listOf(
+        SettingItem.ToggleItem(
+            title = "Shake Feature",
+            isChecked = settings.enableShake,
+            onToggleChange = { enabled -> viewModel.toggleShake(enabled) }
+        ),
+        SettingItem.ToggleItem(
+            title = "Flip Feature",
+            isChecked = settings.enableFlip,
+            onToggleChange = { enabled -> viewModel.toggleFlip(enabled) }
+        ),
+        SettingItem.ToggleItem(
+            title = "Haptic Feedback",
+            isChecked = settings.hapticFeedback,
+            onToggleChange = { enabled -> viewModel.toggleHaptic(enabled) }
+        )
+    )
+
     Box( // Container
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -99,45 +122,39 @@ fun Cardfolio() {
             )
         ){
             // TODO: add Tabs to navigate to different settings type
-            SettingsTab()
+            SettingsTab(gameplaySettings)
         }
     }
 }
 
-/**
- * This will display all the settings options related to gameplay
- * such as toggles for tilt, microphone, etc.
- */
 @Composable
-fun SettingsTab() {
-    // TODO: fix data class, toggle logic
-    var settings by remember { mutableStateOf(SettingsState()) }
-
+fun SettingsTab(
+    settingsType: List<SettingItem>
+) {
     LazyColumn( // Vertical scroll container
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
     ) {
-        item {
-            SettingsToggleRow(
-                title = "Tilt Feature",
-                isChecked = settings.enableShake,
-                onCheckedChange = { isEnabled ->
-                    settings = settings.copy(enableShake = isEnabled)
-                }
-            )
-        }
-        item {
-            SettingsToggleRow(
-                title = "Microphone",
-                isChecked = settings.useMicrophone,
-                onCheckedChange = { isEnabled ->
-                    settings = settings.copy(useMicrophone = isEnabled)
-                }
-            )
+        items(settingsType) { settings ->
+            when (settings) {
+                is SettingItem.ToggleItem -> SettingsToggleRow(
+                    title = settings.title,
+                    isChecked = settings.isChecked,
+                    onCheckedChange = settings.onToggleChange
+                )
+
+                is SettingItem.SliderItem -> SettingsSliderRow(
+                    title = settings.title,
+                    value = settings.value,
+                    onValueChange = settings.onValueChange,
+                    valueRange = settings.valueRange
+                )
+            }
         }
     }
 }
+
 
 /**
  * Displays each setting option with a toggle button
@@ -169,15 +186,44 @@ fun SettingsToggleRow(
     }
 }
 
-data class ToggleItem(
-    val title: String,
-    val isChecked: Boolean,
-    val onToggleChange: (Boolean) -> Unit
-)
+/**
+ * Displays each setting option with a slider
+ */
+@Composable
+fun SettingsSliderRow(
+    title: String,
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+    onValueChange: (Float) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(36.dp)
+    ) {
+        Text(
+            text = title,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        //TODO: add slider
+    }
+}
 
-data class SliderItem(
-    val title: String,
-    val value: Float,
-    val valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
-    val onValueChange: (Float) -> Unit
-)
+sealed class SettingItem {
+    data class ToggleItem(
+        val title: String,
+        val isChecked: Boolean,
+        val onToggleChange: (Boolean) -> Unit
+    ) : SettingItem()
+
+    data class SliderItem(
+        val title: String,
+        val value: Float,
+        val valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+        val onValueChange: (Float) -> Unit
+    ) : SettingItem()
+}
