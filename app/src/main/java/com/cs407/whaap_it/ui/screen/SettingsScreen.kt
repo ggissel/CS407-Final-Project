@@ -107,7 +107,7 @@ fun Cardfolio() {
 @Composable
 fun SettingsTab() {
     // TODO: fix data class, toggle logic
-    var settings by remember { mutableStateOf(GameSettings()) }
+    var settings by remember { mutableStateOf(AppSettings()) }
 
     LazyColumn( // Vertical scroll container
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -117,18 +117,18 @@ fun SettingsTab() {
         item {
             SettingsToggleRow(
                 title = "Tilt Feature",
-                isChecked = settings.enableTilt,
+                isChecked = settings.enableShake,
                 onCheckedChange = { isEnabled ->
-                    settings = settings.copy(enableTilt = isEnabled)
+                    settings = settings.copy(enableShake = isEnabled)
                 }
             )
         }
         item {
             SettingsToggleRow(
                 title = "Microphone",
-                isChecked = settings.enableTilt,
+                isChecked = settings.useMicrophone,
                 onCheckedChange = { isEnabled ->
-                    settings = settings.copy(enableTilt = isEnabled)
+                    settings = settings.copy(useMicrophone = isEnabled)
                 }
             )
         }
@@ -168,8 +168,34 @@ fun SettingsToggleRow(
 /**
  * Holds the toggle state of each game settings option
  */
-data class GameSettings(
-    val enableTilt: Boolean = false,
-    val useMicrophone: Boolean = false,
-    val hapticFeedback: Boolean = true
+data class AppSettings(
+    // Game Settings
+    val enableShake: Boolean = true, // Accelerometer
+    val enableFlip: Boolean = true, // Gyroscope
+    val useMicrophone: Boolean = true, // Microphone
+    val hapticFeedback: Boolean = true, // Vibrations
+    val pinchGesture: Boolean = true, // Pinch Gesture
+    val swipeGesture: Boolean = true, // Swipe Gesture
+    val doubleTap: Boolean = true, // Double Tap Gesture
+    val longPress: Boolean = true, // Long Press
+
+    // Audio/Music Settings
+    val enableMusic: Boolean = true,
+    var musicVolume: Int = 50,
+    var appVolume: Int = 50,
+    val groovyMode: Boolean = false, // A very different music track
+
+    )
+
+data class ToggleItem(
+    val title: String,
+    val isChecked: Boolean,
+    val onToggleChange: (Boolean) -> Unit
+)
+
+data class SliderItem(
+    val title: String,
+    val value: Float,
+    val valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+    val onValueChange: (Float) -> Unit
 )
