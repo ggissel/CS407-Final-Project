@@ -47,6 +47,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(),
     onNavigateToHome: () -> Unit = {}
 ) {
+    // TODO: add Back button to navigate back to Home/Start Screen
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
