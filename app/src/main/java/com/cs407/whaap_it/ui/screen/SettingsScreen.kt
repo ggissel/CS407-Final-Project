@@ -8,13 +8,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -30,7 +28,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.whaap_it.R
@@ -41,7 +38,6 @@ import com.cs407.whaap_it.ui.theme.WhaapitTheme
  */
 @Composable
 fun SettingsScreen( // TODO: add navigation function back to home as param
-
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -62,7 +58,6 @@ fun SettingsScreen( // TODO: add navigation function back to home as param
                 .padding(24.dp)
         )
 
-        // TODO: Create an ElevatedCard to hold all the toggle buttons, etc.
         Cardfolio()
     }
 
@@ -111,6 +106,7 @@ fun Cardfolio() {
  */
 @Composable
 fun SettingsTab() {
+    // TODO: fix data class, toggle logic
     var settings by remember { mutableStateOf(GameSettings()) }
 
     LazyColumn( // Vertical scroll container
