@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -100,9 +101,40 @@ fun Cardfolio(
             onToggleChange = { enabled -> viewModel.toggleFlip(enabled) }
         ),
         SettingItem.ToggleItem(
+            title = "Microphone",
+            isChecked = settings.useMicrophone,
+            onToggleChange = { enabled -> viewModel.toggleMic(enabled) }
+        ),
+        SettingItem.ToggleItem(
             title = "Haptic Feedback",
             isChecked = settings.hapticFeedback,
             onToggleChange = { enabled -> viewModel.toggleHaptic(enabled) }
+        ),
+        SettingItem.ToggleItem(
+            title = "Pinch Gesture",
+            isChecked = settings.pinchGesture,
+            onToggleChange = { enabled -> viewModel.togglePinch(enabled) }
+        ),
+        SettingItem.ToggleItem(
+            title = "Swipe Gesture",
+            isChecked = settings.swipeGesture,
+            onToggleChange = { enabled -> viewModel.toggleSwipe(enabled) }
+        ),
+        SettingItem.ToggleItem(
+            title = "Double Tap Gesture",
+            isChecked = settings.doubleTap,
+            onToggleChange = { enabled -> viewModel.toggleDoubleTap(enabled) }
+        ),
+        SettingItem.ToggleItem(
+            title = "Long Press Gesture",
+            isChecked = settings.longPress,
+            onToggleChange = { enabled -> viewModel.toggleLongPress(enabled) }
+        ),
+        SettingItem.SliderItem(
+            title = "Music",
+            value = settings.musicVolume,
+            valueRange = 0f..1f,
+            onValueChange = { volume -> viewModel.setMusicVolume(volume) }
         )
     )
 
@@ -203,13 +235,22 @@ fun SettingsSliderRow(
             .fillMaxSize()
             .padding(36.dp)
     ) {
-        Text(
-            text = title,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        //TODO: add slider
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            Text(
+                text = title,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Slider(
+                value = value,
+                valueRange = valueRange,
+                onValueChange = onValueChange
+            )
+        }
     }
 }
 
