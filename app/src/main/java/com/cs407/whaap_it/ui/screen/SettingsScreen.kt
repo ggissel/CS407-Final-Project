@@ -5,14 +5,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -47,25 +53,44 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(),
     onNavigateToHome: () -> Unit = {}
 ) {
-    // TODO: add Back button to navigate back to Home/Start Screen
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize(), // Fill entire screen
     )
     {
-        // Title Header
-        Text( // TODO: maintain styling consistency w/ rest of the app
-            text = stringResource(id = R.string.settings_page_title),
-            style = MaterialTheme.typography.headlineMedium,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .background(color = MaterialTheme.colorScheme.primary)
-                .padding(24.dp)
-        )
+                .padding(vertical = 16.dp)
+        ) {
+            IconButton(onClick = onNavigateToHome) {
+                Icon(
+                    Icons.Default.ArrowBack,
+                    contentDescription = "Back to Home",
+                    tint = Color.White
+                )
+            }
+
+            // Header Title
+            Box(
+                modifier = Modifier
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(id = R.string.settings_page_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.size(48.dp)) // same width as IconButton for symmetry
+        }
+
 
         Cardfolio(viewModel)
     }
