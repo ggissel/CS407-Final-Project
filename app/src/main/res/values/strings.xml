@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Whaap-it</string>
     <string name="settings_page_title">Settings</string>
+    <string name="leaderboard_page_title">Leaderboard</string>
 </resources>
