@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.cs407.whaap_it.ui.screen.LeaderboardScreen
 import com.cs407.whaap_it.ui.screen.SettingsScreen
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
 
@@ -61,8 +62,18 @@ fun AppNavigation(
                 onNavigateToSettings = { navController.navigate("settings") },
             ) // Displays the HomeScreen composable
         }
+        composable("home") {
+            StartScreen(
+                onNavigateToLeaderboard = { navController.navigate("leaderboard") },
+            ) // Displays the HomeScreen composable
+        }
         composable("settings") {
             SettingsScreen(
+                onNavigateToHome = { navController.navigate("home") }
+            )
+        }
+        composable("leaderboard") {
+            LeaderboardScreen(
                 onNavigateToHome = { navController.navigate("home") }
             )
         }
@@ -74,6 +85,7 @@ fun AppNavigation(
 @Composable
 fun StartScreen(
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToLeaderboard: () -> Unit = {},
     modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
@@ -113,7 +125,7 @@ fun StartScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedButton(
-            onClick = { /* TODO: Navigate to leaderboard screen */ },
+            onClick = { onNavigateToLeaderboard() },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
