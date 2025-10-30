@@ -1,13 +1,16 @@
 package com.cs407.whaap_it.ui.viewModels
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
 
 data class LeaderboardState(
     val leaderboard: List<Pair<String, Int>> = emptyList()
 )
 
-class LeaderboardViewModel {
+class LeaderboardViewModel : ViewModel() {
     private val _leaderboardState = mutableStateOf(LeaderboardState())
     val leaderboardState: MutableState<LeaderboardState> = _leaderboardState
 

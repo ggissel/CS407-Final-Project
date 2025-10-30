@@ -20,8 +20,6 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,8 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.cs407.whaap_it.R
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cs407.whaap_it.R
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.cs407.whaap_it.ui.viewModels.LeaderboardViewModel
 
@@ -113,7 +111,6 @@ fun LeaderboardScreenPreview() {
 /**
  * Card displaying the tabbed leaderboard content
  */
-// TODO LeaderboardViewModel integration and change layout/names
 @Composable
 fun LeaderboardCard(
     viewModel: LeaderboardViewModel = viewModel()
@@ -121,17 +118,9 @@ fun LeaderboardCard(
 
     val leaderboardState by viewModel.leaderboardState
 
-    val tabItems = listOf("Local","Global")
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
-
-    val currentList = leaderboardState.leaderboard
-        .mapIndexed { index, pair ->
-            LeaderboardEntry(
-                rank = index + 1,
-                playerName = pair.first,
-                score = pair.second
-            )
-        }
+    // For adding tabs (maybe)
+    // val tabItems = listOf("Local","Global")
+    // var selectedTabIndex by remember { mutableIntStateOf(0) }
 
     viewModel.addScore("person1", 70)
     viewModel.addScore("person2", 65)
@@ -149,6 +138,15 @@ fun LeaderboardCard(
     viewModel.addScore("person14", 10)
     viewModel.addScore("person15", 5)
 
+    val currentList = leaderboardState.leaderboard
+        .mapIndexed { index, pair ->
+            LeaderboardEntry(
+                rank = index + 1,
+                playerName = pair.first,
+                score = pair.second
+            )
+        }
+
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -164,24 +162,11 @@ fun LeaderboardCard(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         ) {
-            var selectedTabIndex by remember { mutableIntStateOf(0) }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                TabRow(
-                    selectedTabIndex = selectedTabIndex,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                ) {
-                    tabItems.forEachIndexed { index, title ->
-                        Tab(
-                            selected = index == selectedTabIndex,
-                            onClick = { selectedTabIndex = index },
-                            text = {
-                                Text(text = title) }
-                        )
-                    }
-                }
+
 
                 LeaderboardList(entries = currentList)
 
