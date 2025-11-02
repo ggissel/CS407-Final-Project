@@ -69,7 +69,7 @@ fun SettingsScreen(
             IconButton(onClick = onNavigateToHome) {
                 Icon(
                     Icons.Default.ArrowBack,
-                    contentDescription = "Back to Home",
+                    contentDescription = stringResource(R.string.settings_arrowback_description),
                     tint = Color.White
                 )
             }
@@ -118,42 +118,42 @@ fun Cardfolio(
     var settings by viewModel.settingsState
     val gameplaySettings = listOf(
         SettingItem.ToggleItem(
-            title = "Shake Feature",
+            title = stringResource(R.string.settings_shake_feature),
             isChecked = settings.enableShake,
             onToggleChange = { enabled -> viewModel.toggleShake(enabled) }
         ),
         SettingItem.ToggleItem(
-            title = "Flip Feature",
+            title = stringResource(R.string.settings_flip_feature),
             isChecked = settings.enableFlip,
             onToggleChange = { enabled -> viewModel.toggleFlip(enabled) }
         ),
         SettingItem.ToggleItem(
-            title = "Microphone",
+            title = stringResource(R.string.settings_microphone),
             isChecked = settings.useMicrophone,
             onToggleChange = { enabled -> viewModel.toggleMic(enabled) }
         ),
         SettingItem.ToggleItem(
-            title = "Haptic Feedback",
+            title = stringResource(R.string.settings_haptics),
             isChecked = settings.hapticFeedback,
             onToggleChange = { enabled -> viewModel.toggleHaptic(enabled) }
         ),
         SettingItem.ToggleItem(
-            title = "Pinch Gesture",
+            title = stringResource(R.string.settings_pinch),
             isChecked = settings.pinchGesture,
             onToggleChange = { enabled -> viewModel.togglePinch(enabled) }
         ),
         SettingItem.ToggleItem(
-            title = "Swipe Gesture",
+            title = stringResource(R.string.settings_swipe),
             isChecked = settings.swipeGesture,
             onToggleChange = { enabled -> viewModel.toggleSwipe(enabled) }
         ),
         SettingItem.ToggleItem(
-            title = "Double Tap Gesture",
+            title = stringResource(R.string.settings_double_tap),
             isChecked = settings.doubleTap,
             onToggleChange = { enabled -> viewModel.toggleDoubleTap(enabled) }
         ),
         SettingItem.ToggleItem(
-            title = "Long Press Gesture",
+            title = stringResource(R.string.settings_long_press),
             isChecked = settings.longPress,
             onToggleChange = { enabled -> viewModel.toggleLongPress(enabled) }
         ),
@@ -161,24 +161,24 @@ fun Cardfolio(
 
     val musicAudioSettings = listOf(
         SettingItem.ToggleItem(
-            title = "Toggle Music",
+            title = stringResource(R.string.settings_music_toggle),
             isChecked = settings.enableMusic,
             onToggleChange = { enabled -> viewModel.toggleMusic(enabled) }
         ),
         SettingItem.SliderItem(
-            title = "Music Volume",
+            title = stringResource(R.string.settings_music_volume),
             value = settings.musicVolume,
             valueRange = 0f..1f,
             onValueChange = { volume -> viewModel.setMusicVolume(volume) }
         ),
         SettingItem.SliderItem(
-            title = "App Volume",
+            title = stringResource(R.string.settings_app_volume),
             value = settings.appVolume,
             valueRange = 0f..1f,
             onValueChange = { volume -> viewModel.setAppVolume(volume) }
         ),
         SettingItem.ToggleItem(
-            title = "Groovy Mode",
+            title = stringResource(R.string.settings_groovy_mode),
             isChecked = settings.groovyMode,
             onToggleChange = { enabled -> viewModel.toggleGroovy(enabled) }
         ),
@@ -186,10 +186,10 @@ fun Cardfolio(
 
     val tabItems = listOf(
         TabItem(
-            title = "Gameplay"
+            title = stringResource(R.string.settings_gameplay_tab)
         ),
         TabItem(
-            title = "Music / Audio"
+            title = stringResource(R.string.settings_music_audio_tab)
         ),
     )
 

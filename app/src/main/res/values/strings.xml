@@ -1,6 +1,21 @@
 <resources>
     <string name="app_name">Whaap-it</string>
     <string name="settings_page_title">Settings</string>
+    <string name="settings_arrowback_description">Back to Home</string>
+    <string name="settings_shake_feature">Shake Feature</string>
+    <string name="settings_flip_feature">Flip Feature</string>
+    <string name="settings_microphone">Microphone</string>
+    <string name="settings_haptics">Haptic Feedback</string>
+    <string name="settings_pinch">Pinch Gesture</string>
+    <string name="settings_swipe">Swipe Gesture</string>
+    <string name="settings_double_tap">Double Tap</string>
+    <string name="settings_long_press">Long Press</string>
+    <string name="settings_music_toggle">Toggle Music</string>
+    <string name="settings_music_volume">Music Volume</string>
+    <string name="settings_app_volume">App Volume</string>
+    <string name="settings_groovy_mode">Groovy Mode</string>
+    <string name="settings_gameplay_tab">Gameplay</string>
+    <string name="settings_music_audio_tab">Music / Audio</string>
     <string name="login_button">Login</string>
     <string name="signup_button">Sign Up</string>
 </resources>
