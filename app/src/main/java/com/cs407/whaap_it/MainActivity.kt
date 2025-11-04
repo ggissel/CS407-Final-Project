@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
@@ -30,44 +31,52 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             WhaapitTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    AppNavigation(
-                        modifier = Modifier
-                            .padding(innerPadding)
-                    )
-                }
+                AppNavigation()
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation(
     modifier: Modifier = Modifier
 ) {
-    // Creates and remembers a NavController to manage navigation state
     val navController = rememberNavController()
 
-    // NavHost sets up the navigation graph for the app
-    NavHost(
-        navController = navController,
-        startDestination = "home"
-    ) {
-        // Controller that handles navigation
-        // First screen to display when app starts
-        // Defines the "home" route and what UI to display there
-        composable("home") {
-            StartScreen(
-                onNavigateToSettings = { navController.navigate("settings") },
-            ) // Displays the HomeScreen composable
-        }
-        composable("settings") {
-            SettingsScreen(
-                onNavigateToHome = { navController.navigate("home") }
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = { },
+                actions = {
+                    IconButton(onClick = { /* TODO: Navigate to profile screen */ }) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "Profile",
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
             )
         }
-
-
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "home",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable("home") {
+                StartScreen(
+                    onNavigateToSettings = { navController.navigate("settings") },
+                )
+            }
+            composable("settings") {
+                SettingsScreen(
+                    onNavigateToHome = { navController.navigate("home") }
+                )
+            }
+        }
     }
 }
 
