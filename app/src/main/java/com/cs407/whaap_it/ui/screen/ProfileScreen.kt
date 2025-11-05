@@ -34,7 +34,6 @@ fun ProfileScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxSize()
     ) {
-        // 🔹 Top Banner (matches SettingsScreen & LoginScreen)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -65,7 +64,6 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.size(48.dp))
         }
 
-        // 🔹 Content Card
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
