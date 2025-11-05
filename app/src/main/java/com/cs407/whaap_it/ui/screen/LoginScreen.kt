@@ -191,7 +191,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.size(48.dp))
         }
 
-        // 🔹 Card-like centered layout (similar spacing to SettingsScreen)
+
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
