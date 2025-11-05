@@ -19,8 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.cs407.whaap_it.auth.*
 import com.google.firebase.auth.FirebaseAuth
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
-import com.cs407.whaap_it.R
-import androidx.compose.ui.res.stringResource
+
 
 @Composable
 fun ErrorText(error: String?, modifier: Modifier = Modifier) {
@@ -162,7 +161,6 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxSize()
     ) {
-        // 🔹 Reused top banner (matches SettingsScreen)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
