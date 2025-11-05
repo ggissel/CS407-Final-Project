@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.cs407.whaap_it.auth.UserState
 import com.cs407.whaap_it.ui.screen.LoginScreen
@@ -64,28 +65,33 @@ fun AppNavigation(
     // Always start at home - guest mode by default
     val startDestination = "home"
 
+    val currentBackStackEntry = navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry.value?.destination?.route
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(
-                title = { },
-                actions = {
-                    IconButton(onClick = {
-                        // Navigate to profile if logged in, otherwise to login
-                        if (currentUser != null) {
-                            navController.navigate("profile")
-                        } else {
-                            navController.navigate("login")
+            if (currentRoute == "home") {
+                TopAppBar(
+                    title = { },
+                    actions = {
+                        IconButton(onClick = {
+                            // Navigate to profile if logged in, otherwise to login
+                            if (currentUser != null) {
+                                navController.navigate("profile")
+                            } else {
+                                navController.navigate("login")
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Profile",
+                                modifier = Modifier.size(32.dp)
+                            )
                         }
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "Profile",
-                            modifier = Modifier.size(32.dp)
-                        )
                     }
-                }
-            )
+                )
+            }
         }
     ) { innerPadding ->
         NavHost(
