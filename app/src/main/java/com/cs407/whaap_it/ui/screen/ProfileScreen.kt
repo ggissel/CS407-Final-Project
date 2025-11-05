@@ -218,7 +218,6 @@ fun ProfileScreen(
 
                             Spacer(modifier = Modifier.height(48.dp))
 
-                            // 🔹 Removed "Back to Home" button — only Logout remains
                             OutlinedButton(
                                 onClick = onLogout,
                                 modifier = Modifier
