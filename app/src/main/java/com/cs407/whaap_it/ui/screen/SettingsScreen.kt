@@ -88,7 +88,7 @@ fun SettingsScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.size(48.dp)) // same width as IconButton for symmetry
+            Spacer(modifier = Modifier.size(48.dp))
         }
 
 

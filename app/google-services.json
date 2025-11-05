@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "890691858971",
+    "project_id": "whaap-5c105",
+    "storage_bucket": "whaap-5c105.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:890691858971:android:e96ca90d68ba56ba113ebe",
+        "android_client_info": {
+          "package_name": "com.cs407.whaap_it"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtsrwZtLEAsKsfa-iN00XJhEyMtCQBVRM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

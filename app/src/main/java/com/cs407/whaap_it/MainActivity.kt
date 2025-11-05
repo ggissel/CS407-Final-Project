@@ -13,17 +13,26 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.cs407.whaap_it.auth.UserState
+import com.cs407.whaap_it.ui.screen.LoginScreen
+import com.cs407.whaap_it.ui.screen.ProfileScreen
 import com.cs407.whaap_it.ui.screen.SettingsScreen
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +52,19 @@ fun AppNavigation(
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
+    var currentUser by remember { mutableStateOf<UserState?>(null) }
+    val auth = FirebaseAuth.getInstance()
+
+    // Check if user is already logged in
+    if (auth.currentUser != null) {
+        currentUser = UserState.Success(
+            email = auth.currentUser?.email ?: "",
+            displayName = auth.currentUser?.displayName ?: "Player"
+        )
+    }
+
+    // Always start at home - guest mode by default
+    val startDestination = "home"
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -50,7 +72,14 @@ fun AppNavigation(
             TopAppBar(
                 title = { },
                 actions = {
-                    IconButton(onClick = { /* TODO: Navigate to profile screen */ }) {
+                    IconButton(onClick = {
+                        // Navigate to profile if logged in, otherwise to login
+                        if (currentUser != null) {
+                            navController.navigate("profile")
+                        } else {
+                            navController.navigate("login")
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.Default.AccountCircle,
                             contentDescription = "Profile",
@@ -63,18 +92,50 @@ fun AppNavigation(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "home",
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable("login") {
+                LoginScreen(
+                    onLoginSuccess = { userState ->
+                        currentUser = userState
+                        // Navigate back to previous screen or home
+                        navController.popBackStack()
+                    },
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
             composable("home") {
                 StartScreen(
                     onNavigateToSettings = { navController.navigate("settings") },
                 )
             }
+
             composable("settings") {
                 SettingsScreen(
                     onNavigateToHome = { navController.navigate("home") }
                 )
+            }
+
+            composable("profile") {
+                // If no user is logged in, this route shouldn't be accessible
+                // Navigation logic in the profile button handles redirecting to login
+                if (currentUser != null) {
+                    ProfileScreen(
+                        userState = currentUser,
+                        onNavigateBack = { navController.popBackStack() },
+                        onLogout = {
+                            FirebaseAuth.getInstance().signOut()
+                            currentUser = null
+                            navController.navigate("home") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
+                }
             }
         }
     }
