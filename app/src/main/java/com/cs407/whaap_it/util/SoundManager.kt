@@ -30,14 +30,22 @@ object SoundManager {
         // Load short sounds
         buttonClickSound = soundPool.load(context, R.raw.ui_button_click_1, 1)
 
+        toggleOnSound = soundPool.load(context, R.raw.toggle_button_on_sound_1, 1)
+
+        toggleOffSound = soundPool.load(context, R.raw.toggle_button_off_sound_1, 1)
+
     }
 
     fun playButtonClick() {
-        soundPool.play(buttonClickSound, 1f, 1f, 1, 0, 1f)
+        soundPool.play(buttonClickSound, 8f, 8f, 1, 0, 1f)
     }
 
     fun playToggleOnSound() {
+        soundPool.play(toggleOnSound, 1f, 1f, 1, 0, 1f)
+    }
 
+    fun playToggleOffSound() {
+        soundPool.play(toggleOffSound, 1f, 1f, 1, 0, 1f)
     }
 
     fun release() {
