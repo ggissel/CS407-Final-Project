@@ -26,7 +26,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.cs407.whaap_it.ui.screen.LeaderboardScreen
 import com.cs407.whaap_it.auth.UserState
 import com.cs407.whaap_it.ui.screen.LoginScreen
 import com.cs407.whaap_it.ui.screen.ProfileScreen
@@ -124,48 +123,6 @@ fun AppNavigation(
                     onNavigateToHome = { navController.navigate("home") }
                 )
             }
-            
-            composable("home") {
-            StartScreen(
-                onNavigateToLeaderboard = { navController.navigate("leaderboard") },
-            ) // Displays the HomeScreen composable
-        }
-
-        composable("leaderboard") {
-            LeaderboardScreen(
-                onNavigateToHome = { navController.navigate("home") }
-            )
-        }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = startDestination,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable("login") {
-                LoginScreen(
-                    onLoginSuccess = { userState ->
-                        currentUser = userState
-                        // Navigate back to previous screen or home
-                        navController.popBackStack()
-                    },
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    }
-                )
-            }
-
-            composable("home") {
-                StartScreen(
-                    onNavigateToSettings = { navController.navigate("settings") },
-                )
-            }
-
-            composable("settings") {
-                SettingsScreen(
-                    onNavigateToHome = { navController.navigate("home") }
-                )
-            }
 
             composable("profile") {
                 // If no user is logged in, this route shouldn't be accessible
@@ -191,7 +148,6 @@ fun AppNavigation(
 @Composable
 fun StartScreen(
     onNavigateToSettings: () -> Unit = {},
-    onNavigateToLeaderboard: () -> Unit = {},
     modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
@@ -231,7 +187,7 @@ fun StartScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedButton(
-            onClick = { onNavigateToLeaderboard() },
+            onClick = { /* TODO: Navigate to leaderboard screen */ },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
