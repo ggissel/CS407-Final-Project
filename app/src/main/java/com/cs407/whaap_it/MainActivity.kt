@@ -22,6 +22,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cs407.whaap_it.ui.screen.SettingsScreen
+import com.cs407.whaap_it.ui.screen.GameScreen
+
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
 
 class MainActivity : ComponentActivity() {
@@ -58,6 +60,7 @@ fun AppNavigation(
         // Defines the "home" route and what UI to display there
         composable("home") {
             StartScreen(
+                onNavigateToGameScreen = {navController.navigate("game")},
                 onNavigateToSettings = { navController.navigate("settings") },
             ) // Displays the HomeScreen composable
         }
@@ -67,6 +70,14 @@ fun AppNavigation(
             )
         }
 
+        composable("game") {
+            GameScreen(
+                onNavigateToHome = {
+                    navController.navigate("home")
+                }
+
+            )
+        }
 
     }
 }
@@ -74,6 +85,7 @@ fun AppNavigation(
 @Composable
 fun StartScreen(
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToGameScreen: () -> Unit = {},
     modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
@@ -92,7 +104,7 @@ fun StartScreen(
         Spacer(modifier = Modifier.height(64.dp))
 
         Button(
-            onClick = { /* TODO: Navigate to game screen */ },
+            onClick = { onNavigateToGameScreen() },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
