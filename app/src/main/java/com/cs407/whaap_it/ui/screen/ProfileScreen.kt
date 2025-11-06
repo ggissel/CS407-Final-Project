@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.whaap_it.auth.UserState
+import com.cs407.whaap_it.util.SoundManager
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -41,7 +42,10 @@ fun ProfileScreen(
                 .background(color = MaterialTheme.colorScheme.primary)
                 .padding(vertical = 16.dp)
         ) {
-            IconButton(onClick = onNavigateBack) {
+            IconButton(onClick = {
+                SoundManager.playButtonClick() // Play button click sound
+                onNavigateBack()
+            }) {
                 Icon(
                     Icons.Default.ArrowBack,
                     contentDescription = "Back",
@@ -128,6 +132,7 @@ fun ProfileScreen(
                                 ) {
                                     OutlinedButton(
                                         onClick = {
+                                            SoundManager.playButtonClick() // Play button click sound
                                             isEditingName = false
                                             newDisplayName = ""
                                             errorMessage = ""
@@ -142,6 +147,8 @@ fun ProfileScreen(
 
                                     Button(
                                         onClick = {
+                                            SoundManager.playButtonClick() // Play button click sound
+
                                             if (newDisplayName.isBlank()) {
                                                 errorMessage = "Name cannot be empty"
                                                 return@Button
@@ -199,6 +206,7 @@ fun ProfileScreen(
 
                                 OutlinedButton(
                                     onClick = {
+                                        SoundManager.playButtonClick() // Play button click sound
                                         isEditingName = true
                                         newDisplayName =
                                             FirebaseAuth.getInstance().currentUser?.displayName
@@ -219,7 +227,10 @@ fun ProfileScreen(
                             Spacer(modifier = Modifier.height(48.dp))
 
                             OutlinedButton(
-                                onClick = onLogout,
+                                onClick = {
+                                    SoundManager.playButtonClick() // Play button click sound
+                                    onLogout()
+                                          },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp)

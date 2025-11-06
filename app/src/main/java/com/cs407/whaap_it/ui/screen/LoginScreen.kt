@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.cs407.whaap_it.auth.*
 import com.google.firebase.auth.FirebaseAuth
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
+import com.cs407.whaap_it.util.SoundManager
 
 
 @Composable
@@ -75,6 +76,8 @@ fun LoginSignUpButton(
 
     Button(
         onClick = {
+            SoundManager.playButtonClick() // Play button click sound
+
             onErrorChange("")
 
             val emailResult = checkEmail(email)
@@ -168,7 +171,10 @@ fun LoginScreen(
                 .background(color = MaterialTheme.colorScheme.primary)
                 .padding(vertical = 16.dp)
         ) {
-            IconButton(onClick = onNavigateBack) {
+            IconButton(onClick = {
+                SoundManager.playButtonClick() // Play button click sound
+                onNavigateBack()
+            }) {
                 Icon(
                     Icons.Default.ArrowBack,
                     contentDescription = "Back to Home",

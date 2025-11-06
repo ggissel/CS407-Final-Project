@@ -44,6 +44,7 @@ import com.cs407.whaap_it.R
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.cs407.whaap_it.ui.viewModels.SettingsViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cs407.whaap_it.util.SoundManager
 
 /**
  * The settings page is where the app settings can be configured
@@ -66,7 +67,10 @@ fun SettingsScreen(
                 .background(color = MaterialTheme.colorScheme.primary)
                 .padding(vertical = 16.dp)
         ) {
-            IconButton(onClick = onNavigateToHome) {
+            IconButton(onClick = {
+                SoundManager.playButtonClick() // Play button click sound
+                onNavigateToHome()
+            }) {
                 Icon(
                     Icons.Default.ArrowBack,
                     contentDescription = "Back to Home",
