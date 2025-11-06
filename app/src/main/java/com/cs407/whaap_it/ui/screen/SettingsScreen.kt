@@ -298,7 +298,14 @@ fun SettingsToggleRow(
         )
         Switch(
             checked = isChecked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = { newCheckedState ->
+                if (!newCheckedState) {
+                    SoundManager.playToggleOnSound()
+                } else {
+                    SoundManager.playToggleOffSound()
+                }
+                onCheckedChange(newCheckedState)
+                              },
             colors = SwitchDefaults.colors() // TODO: change the toggle color
         )
     }
