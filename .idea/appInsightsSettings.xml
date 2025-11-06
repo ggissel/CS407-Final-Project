@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.cs407.whaap_it" />
+                  <option name="mobileSdkAppId" value="1:890691858971:android:e96ca90d68ba56ba113ebe" />
+                  <option name="projectId" value="whaap-5c105" />
+                  <option name="projectNumber" value="890691858971" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
