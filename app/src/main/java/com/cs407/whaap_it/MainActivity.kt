@@ -114,13 +114,6 @@ fun AppNavigation(
                     }
                 )
             }
-            composable("game") {
-                GameScreen(
-                    onNavigateToHome = {
-                        navController.navigate("home")
-                    }
-                )
-            }
 
             composable("home") {
                 StartScreen(
@@ -130,23 +123,19 @@ fun AppNavigation(
                 )
             }
 
+            composable("game") {
+                GameScreen(
+                    onNavigateToHome = {
+                        navController.navigate("home")
+                    }
+                )
+            }
+
             composable("settings") {
                 SettingsScreen(
                     onNavigateToHome = { navController.navigate("home") }
                 )
             }
-            
-            composable("home") {
-            StartScreen(
-                onNavigateToLeaderboard = { navController.navigate("leaderboard") },
-            ) // Displays the HomeScreen composable
-        }
-
-        composable("leaderboard") {
-            LeaderboardScreen(
-                onNavigateToHome = { navController.navigate("home") }
-            )
-        }
 
             composable("Leaderboard") {
                 LeaderboardScreen(
