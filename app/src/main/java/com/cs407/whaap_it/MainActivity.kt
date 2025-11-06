@@ -26,6 +26,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.cs407.whaap_it.ui.screen.LeaderboardScreen
 import com.cs407.whaap_it.auth.UserState
 import com.cs407.whaap_it.ui.screen.LoginScreen
 import com.cs407.whaap_it.ui.screen.ProfileScreen
@@ -134,6 +135,18 @@ fun AppNavigation(
                     onNavigateToHome = { navController.navigate("home") }
                 )
             }
+            
+            composable("home") {
+            StartScreen(
+                onNavigateToLeaderboard = { navController.navigate("leaderboard") },
+            ) // Displays the HomeScreen composable
+        }
+
+        composable("leaderboard") {
+            LeaderboardScreen(
+                onNavigateToHome = { navController.navigate("home") }
+            )
+        }
 
             composable("Leaderboard") {
                 LeaderboardScreen(
