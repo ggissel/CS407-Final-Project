@@ -191,7 +191,6 @@ fun StartScreen(
         Button(
             onClick = {
                 SoundManager.playButtonClick() // Play button click sound
-            /* TODO: Navigate to game screen */
                 onNavigateToGameScreen()},
             modifier = Modifier
                 .fillMaxWidth()
