@@ -31,6 +31,8 @@ import com.cs407.whaap_it.auth.UserState
 import com.cs407.whaap_it.ui.screen.LoginScreen
 import com.cs407.whaap_it.ui.screen.ProfileScreen
 import com.cs407.whaap_it.ui.screen.SettingsScreen
+import com.cs407.whaap_it.ui.screen.LeaderboardScreen
+import com.cs407.whaap_it.ui.screen.GameScreen
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.google.firebase.auth.FirebaseAuth
 
@@ -112,10 +114,19 @@ fun AppNavigation(
                     }
                 )
             }
+            composable("game") {
+                GameScreen(
+                    onNavigateToHome = {
+                        navController.navigate("home")
+                    }
+                )
+            }
 
             composable("home") {
                 StartScreen(
                     onNavigateToSettings = { navController.navigate("settings") },
+                    onNavigateToGameScreen = { navController.navigate("game") },
+                    onNavigateToLeaderboard = { navController.navigate("Leaderboard") }
                 )
             }
 
@@ -136,6 +147,12 @@ fun AppNavigation(
                 onNavigateToHome = { navController.navigate("home") }
             )
         }
+
+            composable("Leaderboard") {
+                LeaderboardScreen(
+                    onNavigateToHome = { navController.navigate("home") }
+                )
+            }
 
             composable("profile") {
                 // If no user is logged in, this route shouldn't be accessible
@@ -161,6 +178,7 @@ fun AppNavigation(
 @Composable
 fun StartScreen(
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToGameScreen: () -> Unit = {},
     onNavigateToLeaderboard: () -> Unit = {},
     modifier: Modifier = Modifier) {
     Column(
@@ -180,7 +198,7 @@ fun StartScreen(
         Spacer(modifier = Modifier.height(64.dp))
 
         Button(
-            onClick = { /* TODO: Navigate to game screen */ },
+            onClick = { onNavigateToGameScreen() },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
