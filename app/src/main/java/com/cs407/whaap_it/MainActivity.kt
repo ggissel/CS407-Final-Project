@@ -31,12 +31,14 @@ import com.cs407.whaap_it.ui.screen.LoginScreen
 import com.cs407.whaap_it.ui.screen.ProfileScreen
 import com.cs407.whaap_it.ui.screen.SettingsScreen
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
+import com.cs407.whaap_it.util.SoundManager
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        SoundManager.init(this) // Initializes SoundManager singleton object to handle component sounds
         setContent {
             WhaapitTheme {
                 AppNavigation()
@@ -76,6 +78,7 @@ fun AppNavigation(
                     title = { },
                     actions = {
                         IconButton(onClick = {
+                            SoundManager.playButtonClick() // Play button click sound
                             // Navigate to profile if logged in, otherwise to login
                             if (currentUser != null) {
                                 navController.navigate("profile")
@@ -166,7 +169,9 @@ fun StartScreen(
         Spacer(modifier = Modifier.height(64.dp))
 
         Button(
-            onClick = { /* TODO: Navigate to game screen */ },
+            onClick = {
+                SoundManager.playButtonClick() // Play button click sound
+            /* TODO: Navigate to game screen */ },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
@@ -187,7 +192,10 @@ fun StartScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedButton(
-            onClick = { /* TODO: Navigate to leaderboard screen */ },
+            onClick = {
+                SoundManager.playButtonClick() // Play button click sound
+            /* TODO: Navigate to leaderboard screen */
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
@@ -208,7 +216,10 @@ fun StartScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedButton(
-            onClick = { onNavigateToSettings() },
+            onClick = {
+                SoundManager.playButtonClick() // Play button click sound
+                onNavigateToSettings()
+                      },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
