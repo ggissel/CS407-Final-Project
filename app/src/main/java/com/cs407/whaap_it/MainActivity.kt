@@ -116,6 +116,7 @@ fun AppNavigation(
             composable("home") {
                 StartScreen(
                     onNavigateToSettings = { navController.navigate("settings") },
+                    onNavigateToLeaderboard = { navController.navigate("leaderboard") },
                 )
             }
 
@@ -124,12 +125,6 @@ fun AppNavigation(
                     onNavigateToHome = { navController.navigate("home") }
                 )
             }
-            
-            composable("home") {
-            StartScreen(
-                onNavigateToLeaderboard = { navController.navigate("leaderboard") },
-            ) // Displays the HomeScreen composable
-        }
 
         composable("leaderboard") {
             LeaderboardScreen(
