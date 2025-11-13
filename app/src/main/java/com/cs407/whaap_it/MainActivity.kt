@@ -26,7 +26,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.cs407.whaap_it.ui.screen.LeaderboardScreen
 import com.cs407.whaap_it.auth.UserState
 import com.cs407.whaap_it.ui.screen.LoginScreen
 import com.cs407.whaap_it.ui.screen.ProfileScreen
@@ -34,12 +33,14 @@ import com.cs407.whaap_it.ui.screen.SettingsScreen
 import com.cs407.whaap_it.ui.screen.LeaderboardScreen
 import com.cs407.whaap_it.ui.screen.GameScreen
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
+import com.cs407.whaap_it.util.SoundManager
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        SoundManager.init(this) // Initializes SoundManager singleton object to handle component sounds
         setContent {
             WhaapitTheme {
                 AppNavigation()
@@ -79,6 +80,7 @@ fun AppNavigation(
                     title = { },
                     actions = {
                         IconButton(onClick = {
+                            SoundManager.playButtonClick() // Play button click sound
                             // Navigate to profile if logged in, otherwise to login
                             if (currentUser != null) {
                                 navController.navigate("profile")
@@ -187,7 +189,9 @@ fun StartScreen(
         Spacer(modifier = Modifier.height(64.dp))
 
         Button(
-            onClick = { onNavigateToGameScreen() },
+            onClick = {
+                SoundManager.playButtonClick() // Play button click sound
+                onNavigateToGameScreen()},
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
@@ -208,7 +212,10 @@ fun StartScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedButton(
-            onClick = { onNavigateToLeaderboard() },
+            onClick = {
+                SoundManager.playButtonClick() // Play button click sound
+                onNavigateToLeaderboard()
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
@@ -229,7 +236,10 @@ fun StartScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedButton(
-            onClick = { onNavigateToSettings() },
+            onClick = {
+                SoundManager.playButtonClick() // Play button click sound
+                onNavigateToSettings()
+                      },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)

@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.cs407.whaap_it.util.SoundManager
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 
@@ -41,7 +42,10 @@ fun GameScreen(
         ) {
 
             IconButton(
-                onClick = { onNavigateToHome() },
+                onClick = {
+                    SoundManager.playButtonClick() // Play button click sound
+                    onNavigateToHome()
+                          },
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(8.dp)
