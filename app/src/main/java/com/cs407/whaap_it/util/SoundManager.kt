@@ -16,6 +16,22 @@ object SoundManager {
 
     private var toggleOffSound: Int = 0
 
+    private var bopItSound: Int = 0
+
+    private var pullItSound: Int = 0
+
+    private var twistItSound: Int = 0
+
+    private var weakGameOverSound: Int = 0
+
+    private var tooSlowSound: Int = 0
+
+    private var zipperSquealSound: Int = 0
+
+    private var swipeSound: Int = 0
+
+    private var cartoonJumpSound: Int = 0
+
     fun init(context: Context) {
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_GAME)
@@ -28,16 +44,31 @@ object SoundManager {
             .build()
 
         // Load short sounds
-        buttonClickSound = soundPool.load(context, R.raw.ui_button_click_1, 1)
+        buttonClickSound = soundPool.load(context, R.raw.ui_button_click_2, 1)
 
         toggleOnSound = soundPool.load(context, R.raw.toggle_button_on_sound_1, 1)
 
         toggleOffSound = soundPool.load(context, R.raw.toggle_button_off_sound_1, 1)
 
+        bopItSound = soundPool.load(context, R.raw.bopit, 1)
+
+        pullItSound = soundPool.load(context, R.raw.pullit, 1)
+
+        twistItSound = soundPool.load(context, R.raw.twistit, 1)
+
+        weakGameOverSound = soundPool.load(context, R.raw.weak_game_over, 1)
+
+        tooSlowSound = soundPool.load(context, R.raw.too_slow_game_over, 1)
+
+        zipperSquealSound = soundPool.load(context, R.raw.zipper_squeal, 1)
+
+        swipeSound = soundPool.load(context, R.raw.swipe, 1)
+
+        cartoonJumpSound = soundPool.load(context, R.raw.cartoon_jump, 1)
     }
 
     fun playButtonClick() {
-        soundPool.play(buttonClickSound, 8f, 8f, 1, 0, 1f)
+        soundPool.play(buttonClickSound, 1f, 1f, 1, 0, 1f)
     }
 
     fun playToggleOnSound() {
@@ -46,6 +77,38 @@ object SoundManager {
 
     fun playToggleOffSound() {
         soundPool.play(toggleOffSound, 1f, 1f, 1, 0, 1f)
+    }
+
+    fun playBopIt() {
+        soundPool.play(bopItSound, 1f, 1f, 1, 0, 1f)
+    }
+
+    fun playPullIt() {
+        soundPool.play(pullItSound, 1f, 1f, 1, 0, 1f)
+    }
+
+    fun playTwistIt() {
+        soundPool.play(twistItSound, 1f, 1f, 1, 0, 1f)
+    }
+
+    fun playWeakGameOver() {
+        soundPool.play(weakGameOverSound, 1f, 1f, 1, 0, 1f)
+    }
+
+    fun tooSlowGameOver() {
+        soundPool.play(tooSlowSound, 1f, 1f, 1, 0, 1f)
+    }
+
+    fun zipperSquealSound() {
+        soundPool.play(zipperSquealSound, 1f, 1f, 1, 0, 1f)
+    }
+
+    fun swipeSound() {
+        soundPool.play(swipeSound, 1f, 1f, 1, 0, 1f)
+    }
+
+    fun cartoonJumpSound() {
+        soundPool.play(cartoonJumpSound, 1f, 1f, 1, 0, 1f)
     }
 
     fun release() {

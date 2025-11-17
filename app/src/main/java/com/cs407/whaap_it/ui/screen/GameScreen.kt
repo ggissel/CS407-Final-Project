@@ -41,10 +41,10 @@ data class GameState(
 /**
  * Enum class that stores all the possible game actions and their points value
  */
-enum class GameAction(val displayName: String, val points: Int) {
-    WHAAP("Whaap-it!", 10),
-    PULL("Pull-it!", 10),
-    TWIST("Twist-it!", 10),
+enum class GameAction(val displayName: String, val points: Int, val playSound: () -> Unit, val playActionSound: () -> Unit) {
+    WHAAP("Whaap-it!", 10, {SoundManager.playBopIt()}, {SoundManager.zipperSquealSound()}),
+    PULL("Pull-it!", 10, {SoundManager.playPullIt()}, {SoundManager.swipeSound()}),
+    TWIST("Twist-it!", 10, {SoundManager.playTwistIt()}, {SoundManager.cartoonJumpSound()}),
     // Add more Game Actions in the future...
 }
 
@@ -78,6 +78,8 @@ private fun startGame(onStateUpdate: (GameState) -> Unit) {
             totalTimeRemaining = 60f,
         )
     )
+
+    firstAction?.playSound()
 }
 
 /**
@@ -101,6 +103,8 @@ private fun nextAction(currentState: GameState, onStateUpdate: (GameState) -> Un
     }
 
     if (nextAction != null) {
+        nextAction.playSound()
+
         onStateUpdate(
             currentState.copy(
                 currentAction = nextAction,
@@ -134,6 +138,7 @@ private fun handleAction(
 
     if (currentAction == performedAction) {
         val newScore = currentState.score + performedAction.points
+        currentAction.playActionSound()
         onStateUpdate(
             currentState.copy(
                 score = newScore,
@@ -144,6 +149,7 @@ private fun handleAction(
         )
         SoundManager.playButtonClick()
     } else {
+        SoundManager.playWeakGameOver()
         onStateUpdate(
             currentState.copy(
                 isGameActive = false,
@@ -333,6 +339,7 @@ fun GameScreen(
 
                     // Has current action time expired?
                     if (gameState.actionTimeRemaining <= 0) {
+                        SoundManager.tooSlowGameOver()
                         gameState = gameState.copy(isGameActive = false)
                     }
                 }
