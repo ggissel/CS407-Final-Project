@@ -143,6 +143,13 @@ private fun handleAction(
             )
         )
         SoundManager.playButtonClick()
+    } else {
+        onStateUpdate(
+            currentState.copy(
+                isGameActive = false,
+                currentAction = null
+            )
+        )
     }
 }
 
@@ -212,11 +219,9 @@ fun GameArea(
                 .fillMaxWidth()
                 .fillMaxHeight(0.5f)
                 .background(Color.Yellow)
-                .clickable(enabled = !gameState.isInActionGap && currentAction == GameAction.TWIST) {
-                    currentAction?.let { action ->
-                        if (action == GameAction.TWIST) {
-                            onActionPerformed(action)
-                        }
+                .clickable(enabled = !gameState.isInActionGap) {
+                    currentAction?.let {
+                            onActionPerformed(GameAction.TWIST)
                     }
                 },
             contentAlignment = Alignment.Center
@@ -240,11 +245,9 @@ fun GameArea(
                 .fillMaxWidth()
                 .fillMaxHeight(0.5f)
                 .background(Color.Blue)
-                .clickable(enabled = !gameState.isInActionGap && currentAction == GameAction.PULL) {
-                    currentAction?.let { action ->
-                        if (action == GameAction.PULL) {
-                            onActionPerformed(action)
-                        }
+                .clickable(enabled = !gameState.isInActionGap) {
+                    currentAction?.let {
+                            onActionPerformed(GameAction.PULL)
                     }
                 },
             contentAlignment = Alignment.Center
@@ -267,11 +270,9 @@ fun GameArea(
                 .size(300.dp)
                 .shadow(8.dp, CircleShape)
                 .background(Color.Red, CircleShape)
-                .clickable(enabled = !gameState.isInActionGap && currentAction == GameAction.WHAAP) {
-                    currentAction?.let { action ->
-                        if (action == GameAction.WHAAP) {
-                            onActionPerformed(action)
-                        }
+                .clickable(enabled = !gameState.isInActionGap) {
+                    currentAction?.let {
+                            onActionPerformed(GameAction.WHAAP)
                     }
                 },
             contentAlignment = Alignment.Center
@@ -332,7 +333,7 @@ fun GameScreen(
 
                     // Has current action time expired?
                     if (gameState.actionTimeRemaining <= 0) {
-                        nextAction(gameState) { newState -> gameState = newState }
+                        gameState = gameState.copy(isGameActive = false)
                     }
                 }
 
@@ -350,7 +351,7 @@ fun GameScreen(
         }
     }
 
-    if (!gameState.isGameActive && gameState.totalTimeRemaining <= 0) {
+    if (!gameState.isGameActive) {
         AlertDialog(
             onDismissRequest = { /* Don't allow dismiss by clicking outside */ },
             title = { Text("Game Over!") },
