@@ -2,6 +2,7 @@ package com.cs407.whaap_it.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,12 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.cs407.whaap_it.util.SoundManager
 import kotlinx.coroutines.delay
+import kotlin.math.abs
 import kotlin.random.Random
 
 /**
@@ -225,9 +228,18 @@ fun GameArea(
                 .fillMaxWidth()
                 .fillMaxHeight(0.5f)
                 .background(Color.Yellow)
-                .clickable(enabled = !gameState.isInActionGap) {
-                    currentAction?.let {
-                            onActionPerformed(GameAction.TWIST)
+                .pointerInput(gameState.isInActionGap) {
+                    if (!gameState.isInActionGap) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            val (x, y) = dragAmount
+                            // Detect horizontal swipe (left or right)
+                            if (abs(x) > abs(y) && abs(x) > 50) {
+                                currentAction?.let {
+                                    onActionPerformed(GameAction.TWIST)
+                                }
+                            }
+                        }
                     }
                 },
             contentAlignment = Alignment.Center
@@ -251,9 +263,18 @@ fun GameArea(
                 .fillMaxWidth()
                 .fillMaxHeight(0.5f)
                 .background(Color.Blue)
-                .clickable(enabled = !gameState.isInActionGap) {
-                    currentAction?.let {
-                            onActionPerformed(GameAction.PULL)
+                .pointerInput(gameState.isInActionGap) {
+                    if (!gameState.isInActionGap) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            val (x, y) = dragAmount
+                            // Detect downward swipe
+                            if (y > abs(x) && y > 50) {
+                                currentAction?.let {
+                                    onActionPerformed(GameAction.PULL)
+                                }
+                            }
+                        }
                     }
                 },
             contentAlignment = Alignment.Center
