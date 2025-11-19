@@ -28,7 +28,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.cs407.whaap_it.auth.UserState
 import com.cs407.whaap_it.ui.screen.LoginScreen
-import com.cs407.whaap_it.ui.screen.ProfileScreen
+import com.cs407.whaap_it.ui.screen.profile.ProfileScreen
 import com.cs407.whaap_it.ui.screen.SettingsScreen
 import com.cs407.whaap_it.ui.screen.LeaderboardScreen
 import com.cs407.whaap_it.ui.screen.GameScreen

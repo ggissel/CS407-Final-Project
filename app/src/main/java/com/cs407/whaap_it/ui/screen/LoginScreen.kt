@@ -20,10 +20,12 @@ import com.cs407.whaap_it.auth.*
 import com.google.firebase.auth.FirebaseAuth
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.cs407.whaap_it.util.SoundManager
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cs407.whaap_it.ui.screen.login.LoginViewModel
 
 
 @Composable
-fun ErrorText(error: String?, modifier: Modifier = Modifier) {
+private fun ErrorText(error: String?, modifier: Modifier = Modifier) {
     if (!error.isNullOrEmpty()) {
         Text(
             text = error,
@@ -35,7 +37,7 @@ fun ErrorText(error: String?, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun EmailField(
+private fun EmailField(
     modifier: Modifier = Modifier,
     email: String,
     onValueChange: (String) -> Unit
@@ -50,7 +52,7 @@ fun EmailField(
 }
 
 @Composable
-fun PasswordField(
+private fun PasswordField(
     modifier: Modifier = Modifier,
     password: String,
     onValueChange: (String) -> Unit
@@ -66,53 +68,12 @@ fun PasswordField(
 }
 
 @Composable
-fun LoginSignUpButton(
-    email: String,
-    password: String,
-    onErrorChange: (String) -> Unit,
-    onSuccess: (UserState) -> Unit
+private fun LoginSignUpButton(
+    isLoading: Boolean,
+    onClick: () -> Unit
 ) {
-    var isLoading by remember { mutableStateOf(false) }
-
     Button(
-        onClick = {
-            SoundManager.playButtonClick() // Play button click sound
-
-            onErrorChange("")
-
-            val emailResult = checkEmail(email)
-            if (emailResult == EmailResult.Empty) {
-                onErrorChange("Email cannot be empty")
-                return@Button
-            } else if (emailResult == EmailResult.Invalid) {
-                onErrorChange("Invalid email format")
-                return@Button
-            }
-
-            val passwordResult = checkPassword(password)
-            if (passwordResult == PasswordResult.Empty) {
-                onErrorChange("Password cannot be empty")
-                return@Button
-            } else if (passwordResult == PasswordResult.Short) {
-                onErrorChange("Password must be at least 6 characters")
-                return@Button
-            } else if (passwordResult == PasswordResult.Invalid) {
-                onErrorChange("Password must contain at least one uppercase letter, one lowercase letter, and one digit")
-                return@Button
-            }
-
-            if (emailResult == EmailResult.Valid && passwordResult == PasswordResult.Valid) {
-                isLoading = true
-                signInWithCallback(email, password) { success, displayName ->
-                    isLoading = false
-                    if (success) {
-                        onSuccess(UserState.Success(email, displayName ?: "Player"))
-                    } else {
-                        onErrorChange("Authentication failed. Please try again.")
-                    }
-                }
-            }
-        },
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp),
@@ -126,78 +87,25 @@ fun LoginSignUpButton(
     }
 }
 
-fun signInWithCallback(
-    email: String,
-    password: String,
-    onComplete: (success: Boolean, displayName: String?) -> Unit
-) {
-    val auth = FirebaseAuth.getInstance()
-    auth.signInWithEmailAndPassword(email, password)
-        .addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val user = auth.currentUser
-                onComplete(true, user?.displayName)
-            } else {
-                auth.createUserWithEmailAndPassword(email, password)
-                    .addOnSuccessListener {
-                        val user = auth.currentUser
-                        onComplete(true, user?.displayName)
-                    }
-                    .addOnFailureListener {
-                        onComplete(false, null)
-                    }
-            }
-        }
-}
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: (UserState) -> Unit,
     onNavigateBack: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: LoginViewModel = viewModel()
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var errorMsg by remember { mutableStateOf("") }
+    // Collect UI state from ViewModel
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxSize()
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = MaterialTheme.colorScheme.primary)
-                .padding(vertical = 16.dp)
-        ) {
-            IconButton(onClick = {
-                SoundManager.playButtonClick() // Play button click sound
-                onNavigateBack()
-            }) {
-                Icon(
-                    Icons.Default.ArrowBack,
-                    contentDescription = "Back to Home",
-                    tint = Color.White
-                )
-            }
+        // Top app bar with back button
+        LoginTopBar(onNavigateBack = onNavigateBack)
 
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Login/Sign Up",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.size(48.dp))
-        }
-
-
+        // Main content card
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -221,6 +129,7 @@ fun LoginScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    // Title
                     Text(
                         text = "WHAAP IT!",
                         fontSize = 36.sp,
@@ -230,6 +139,7 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    // Subtitle
                     Text(
                         text = "Login or Sign Up",
                         fontSize = 20.sp,
@@ -238,24 +148,74 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    ErrorText(errorMsg)
+                    // Error message display
+                    ErrorText(error = uiState.errorMessage)
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    EmailField(email = email, onValueChange = { email = it })
+                    // Email input field
+                    EmailField(
+                        email = uiState.email,
+                        onValueChange = viewModel::onEmailChange
+                    )
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    PasswordField(password = password, onValueChange = { password = it })
+
+                    // Password input field
+                    PasswordField(
+                        password = uiState.password,
+                        onValueChange = viewModel::onPasswordChange
+                    )
+
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // Login/Sign up button
                     LoginSignUpButton(
-                        email = email,
-                        password = password,
-                        onErrorChange = { errorMsg = it },
-                        onSuccess = onLoginSuccess
+                        isLoading = uiState.isLoading,
+                        onClick = {
+                            SoundManager.playButtonClick() // Play button click sound
+                            viewModel.onLoginSignUp(onLoginSuccess)
+                        }
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun LoginTopBar(onNavigateBack: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color = MaterialTheme.colorScheme.primary)
+            .padding(vertical = 16.dp)
+    ) {
+        IconButton(onClick = {
+            SoundManager.playButtonClick()
+            onNavigateBack()
+        }) {
+            Icon(
+                Icons.Default.ArrowBack,
+                contentDescription = "Back to Home",
+                tint = Color.White
+            )
+        }
+
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Login/Sign Up",
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.size(48.dp))
     }
 }
 
