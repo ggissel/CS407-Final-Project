@@ -1,4 +1,4 @@
-package com.cs407.whaap_it.ui.screen
+package com.cs407.whaap_it.ui.screen.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,56 +18,33 @@ import androidx.compose.ui.unit.sp
 import com.cs407.whaap_it.auth.UserState
 import com.cs407.whaap_it.util.SoundManager
 import com.google.firebase.auth.FirebaseAuth
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun ProfileScreen(
     userState: UserState?,
     onNavigateBack: () -> Unit,
     onLogout: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: ProfileViewModel = viewModel()
 ) {
-    var isEditingName by remember { mutableStateOf(false) }
-    var newDisplayName by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
-    var isUpdating by remember { mutableStateOf(false) }
+    // Initialize ViewModel with user data
+    LaunchedEffect(userState) {
+        viewModel.initialize(userState)
+    }
+
+    // Collect UI state from ViewModel
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.fillMaxSize()
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = MaterialTheme.colorScheme.primary)
-                .padding(vertical = 16.dp)
-        ) {
-            IconButton(onClick = {
-                SoundManager.playButtonClick() // Play button click sound
-                onNavigateBack()
-            }) {
-                Icon(
-                    Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White
-                )
-            }
+        // Top app bar with back button
+        ProfileTopBar(onNavigateBack = onNavigateBack)
 
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Profile",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.size(48.dp))
-        }
-
+        // Main content card
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -91,6 +68,7 @@ fun ProfileScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    // Profile icon
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = "Profile Icon",
@@ -102,135 +80,42 @@ fun ProfileScreen(
 
                     when (userState) {
                         is UserState.Success -> {
-                            if (isEditingName) {
+                            if (uiState.isEditingName) {
                                 // Edit mode
-                                OutlinedTextField(
-                                    value = newDisplayName,
-                                    onValueChange = {
-                                        newDisplayName = it
-                                        errorMessage = ""
+                                ProfileEditMode(
+                                    displayName = uiState.newDisplayName,
+                                    onDisplayNameChange = viewModel::onDisplayNameChange,
+                                    errorMessage = uiState.errorMessage,
+                                    isUpdating = uiState.isUpdating,
+                                    onCancel = {
+                                        SoundManager.playButtonClick()
+                                        viewModel.cancelEditingName()
                                     },
-                                    label = { Text("Display Name") },
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth()
+                                    onSave = {
+                                        SoundManager.playButtonClick()
+                                        viewModel.saveDisplayName()
+                                    }
                                 )
-
-                                if (errorMessage.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = errorMessage,
-                                        color = MaterialTheme.colorScheme.error,
-                                        fontSize = 14.sp
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    OutlinedButton(
-                                        onClick = {
-                                            SoundManager.playButtonClick() // Play button click sound
-                                            isEditingName = false
-                                            newDisplayName = ""
-                                            errorMessage = ""
-                                        },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(48.dp),
-                                        enabled = !isUpdating
-                                    ) {
-                                        Text("CANCEL")
-                                    }
-
-                                    Button(
-                                        onClick = {
-                                            SoundManager.playButtonClick() // Play button click sound
-
-                                            if (newDisplayName.isBlank()) {
-                                                errorMessage = "Name cannot be empty"
-                                                return@Button
-                                            }
-                                            if (newDisplayName.length > 20) {
-                                                errorMessage = "Name must be 20 characters or less"
-                                                return@Button
-                                            }
-
-                                            isUpdating = true
-                                            val user = FirebaseAuth.getInstance().currentUser
-                                            val profileUpdates =
-                                                com.google.firebase.auth.UserProfileChangeRequest.Builder()
-                                                    .setDisplayName(newDisplayName)
-                                                    .build()
-
-                                            user?.updateProfile(profileUpdates)
-                                                ?.addOnCompleteListener { task ->
-                                                    isUpdating = false
-                                                    if (task.isSuccessful) {
-                                                        isEditingName = false
-                                                        newDisplayName = ""
-                                                        errorMessage = ""
-                                                    } else {
-                                                        errorMessage = "Failed to update name"
-                                                    }
-                                                }
-                                        },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(48.dp),
-                                        enabled = !isUpdating
-                                    ) {
-                                        Text(if (isUpdating) "SAVING..." else "SAVE")
-                                    }
-                                }
                             } else {
                                 // Display mode
-                                Text(
-                                    text = FirebaseAuth.getInstance().currentUser?.displayName
-                                        ?: userState.displayName,
-                                    fontSize = 32.sp,
-                                    fontWeight = FontWeight.Bold
+                                ProfileDisplayMode(
+                                    displayName = uiState.displayName,
+                                    email = uiState.email,
+                                    onEditName = {
+                                        SoundManager.playButtonClick()
+                                        viewModel.startEditingName()
+                                    }
                                 )
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Text(
-                                    text = userState.email,
-                                    fontSize = 16.sp,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                )
-
-                                Spacer(modifier = Modifier.height(24.dp))
-
-                                OutlinedButton(
-                                    onClick = {
-                                        SoundManager.playButtonClick() // Play button click sound
-                                        isEditingName = true
-                                        newDisplayName =
-                                            FirebaseAuth.getInstance().currentUser?.displayName
-                                                ?: userState.displayName
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp)
-                                ) {
-                                    Text(
-                                        text = "CHANGE NAME",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
                             }
 
                             Spacer(modifier = Modifier.height(48.dp))
 
+                            // Logout button
                             OutlinedButton(
                                 onClick = {
-                                    SoundManager.playButtonClick() // Play button click sound
+                                    SoundManager.playButtonClick()
                                     onLogout()
-                                          },
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp)
@@ -249,6 +134,132 @@ fun ProfileScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ProfileTopBar(onNavigateBack: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color = MaterialTheme.colorScheme.primary)
+            .padding(vertical = 16.dp)
+    ) {
+        IconButton(onClick = {
+            SoundManager.playButtonClick()
+            onNavigateBack()
+        }) {
+            Icon(
+                Icons.Default.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.White
+            )
+        }
+
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Profile",
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.size(48.dp))
+    }
+}
+
+@Composable
+private fun ProfileDisplayMode(
+    displayName: String,
+    email: String,
+    onEditName: () -> Unit
+) {
+    Text(
+        text = displayName,
+        fontSize = 32.sp,
+        fontWeight = FontWeight.Bold
+    )
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Text(
+        text = email,
+        fontSize = 16.sp,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    OutlinedButton(
+        onClick = onEditName,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+    ) {
+        Text(
+            text = "CHANGE NAME",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+private fun ProfileEditMode(
+    displayName: String,
+    onDisplayNameChange: (String) -> Unit,
+    errorMessage: String,
+    isUpdating: Boolean,
+    onCancel: () -> Unit,
+    onSave: () -> Unit
+) {
+    OutlinedTextField(
+        value = displayName,
+        onValueChange = onDisplayNameChange,
+        label = { Text("Display Name") },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    if (errorMessage.isNotEmpty()) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = errorMessage,
+            color = MaterialTheme.colorScheme.error,
+            fontSize = 14.sp
+        )
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedButton(
+            onClick = onCancel,
+            modifier = Modifier
+                .weight(1f)
+                .height(48.dp),
+            enabled = !isUpdating
+        ) {
+            Text("CANCEL")
+        }
+
+        Button(
+            onClick = onSave,
+            modifier = Modifier
+                .weight(1f)
+                .height(48.dp),
+            enabled = !isUpdating
+        ) {
+            Text(if (isUpdating) "SAVING..." else "SAVE")
         }
     }
 }
