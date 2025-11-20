@@ -35,19 +35,35 @@ import com.cs407.whaap_it.ui.screen.GameScreen
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.cs407.whaap_it.util.SoundManager
 import com.google.firebase.auth.FirebaseAuth
+import com.cs407.whaap_it.util.MusicManager
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        SoundManager.init(this) // Initializes SoundManager singleton object to handle component sounds
+
+        SoundManager.init(this)  // Initializes SoundManager singleton object to handle component sounds
+        MusicManager.startMenuMusic(this) //start stolen_menu_music
+
         setContent {
             WhaapitTheme {
                 AppNavigation()
             }
         }
     }
+
+    override fun onPause() {
+        super.onPause()
+        MusicManager.pauseMenuMusic()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        MusicManager.stopMenuMusic()
+    }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -191,6 +207,7 @@ fun StartScreen(
         Button(
             onClick = {
                 SoundManager.playButtonClick() // Play button click sound
+                MusicManager.stopMenuMusic() //stop menu music when entering GameScreen
                 onNavigateToGameScreen()},
             modifier = Modifier
                 .fillMaxWidth()

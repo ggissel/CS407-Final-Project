@@ -25,6 +25,9 @@ import com.cs407.whaap_it.util.SoundManager
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.random.Random
+import com.cs407.whaap_it.util.MusicManager
+import androidx.compose.ui.platform.LocalContext
+
 
 /**
  * Keeps track of the overall game state, such as the current score, action, time remaining.
@@ -336,9 +339,13 @@ fun GameScreen(
     navController: NavController? = null,
     onNavigateToHome: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     var gameState by remember { mutableStateOf(GameState()) }
 
     LaunchedEffect(gameState.isGameActive) {
+        if (!gameState.isGameActive) {
+            MusicManager.stopGameplayMusic()
+        }
         if (gameState.isGameActive) {
             while (gameState.isGameActive && gameState.totalTimeRemaining > 0) {
                 delay(16L)
@@ -376,19 +383,19 @@ fun GameScreen(
     LaunchedEffect(Unit) {
         if (!gameState.isGameActive && gameState.currentAction == null) {
             startGame { newState -> gameState = newState }
+            MusicManager.startGameplayMusic(context)
         }
     }
 
     if (!gameState.isGameActive) {
         AlertDialog(
-            onDismissRequest = { /* Don't allow dismiss by clicking outside */ },
+            onDismissRequest = {/* Don't allow dismiss by clicking outside */},
             title = { Text("Game Over!") },
-            text = {
-                Text("Final Score: ${gameState.score}")
-            },
+            text = { Text("Final Score: ${gameState.score}") },
             confirmButton = {
                 Button(
                     onClick = {
+                        MusicManager.startGameplayMusic(context)
                         startGame { newState -> gameState = newState }
                     }
                 ) {
@@ -397,13 +404,17 @@ fun GameScreen(
             },
             dismissButton = {
                 Button(
-                    onClick = onNavigateToHome
+                    onClick = {
+                        MusicManager.startMenuMusic(context)
+                        onNavigateToHome()
+                    }
                 ) {
                     Text("Main Menu")
                 }
             }
         )
     }
+
 
     Column(
         modifier = Modifier
@@ -414,6 +425,8 @@ fun GameScreen(
             score = gameState.score,
             totalTimeRemaining = gameState.totalTimeRemaining,
             onBackClick = {
+                MusicManager.stopGameplayMusic()
+                MusicManager.startMenuMusic(context)
                 onNavigateToHome()
             }
         )
