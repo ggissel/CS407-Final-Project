@@ -8,6 +8,7 @@ object MusicManager {
 
     private var mediaPlayer: MediaPlayer? = null
 
+    //Menu Music Functions
     fun startMenuMusic(context: Context) {
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer.create(context, R.raw.stolen_menu_theme)
@@ -29,6 +30,7 @@ object MusicManager {
         mediaPlayer = null
     }
 
+    //Gameplay music Functions
     fun startGameplayMusic(context: Context) {
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer.create(context, R.raw.stolen_gameplay_song)
@@ -50,4 +52,3 @@ object MusicManager {
         mediaPlayer = null
     }
 }
-
