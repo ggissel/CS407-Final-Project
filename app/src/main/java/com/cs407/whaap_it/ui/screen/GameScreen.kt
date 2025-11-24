@@ -27,6 +27,7 @@ import kotlin.math.abs
 import kotlin.random.Random
 import com.cs407.whaap_it.util.MusicManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.Dialog
 
 
 /**
@@ -43,7 +44,8 @@ data class GameState(
     val isInActionGap: Boolean = false,
     val gapTimeRemaining: Float = 0f,
     val countdown: Int = 3,
-    val isInCountdown: Boolean = true
+    val isInCountdown: Boolean = true,
+    val isPaused: Boolean = false
 )
 
 /**
@@ -197,6 +199,60 @@ fun CountdownOverlay(
     }
 }
 
+@Composable
+fun PauseMenuDialog(
+    onResume: () -> Unit,
+    onBackToHome: () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = {}
+    ) {
+        Card(
+            modifier = Modifier
+                .wrapContentSize(),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .width(200.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Game Paused",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Button(
+                        onClick = onResume,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Resume Game")
+                    }
+
+                    Button(
+                        onClick = onBackToHome,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back to menu",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Exit to Menu")
+                    }
+                }
+            }
+        }
+    }
+}
+
 /**
  * The Game Header shows the user's current score and the time remaining for the game.
  * It also currently holds the arrowback button to return to the home screen.
@@ -205,7 +261,7 @@ fun CountdownOverlay(
 fun GameHeader(
     score: Int,
     totalTimeRemaining: Float,
-    onBackClick: () -> Unit
+    onMenuClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -214,12 +270,12 @@ fun GameHeader(
             .background(Color.DarkGray)
     ) {
         IconButton(
-            onClick = onBackClick,
+            onClick = onMenuClick,
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(8.dp)
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+            Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.White)
         }
         Text(
             text = "Score: ${score}",
@@ -263,8 +319,8 @@ fun GameArea(
                 .fillMaxWidth()
                 .fillMaxHeight(0.5f)
                 .background(Color.Yellow)
-                .pointerInput(gameState.isInActionGap, gameState.isInCountdown) {
-                    if (!gameState.isInActionGap && !gameState.isInCountdown) {
+                .pointerInput(gameState.isInActionGap, gameState.isInCountdown, gameState.isPaused) {
+                    if (!gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()
                             val (x, y) = dragAmount
@@ -298,8 +354,8 @@ fun GameArea(
                 .fillMaxWidth()
                 .fillMaxHeight(0.5f)
                 .background(Color.Blue)
-                .pointerInput(gameState.isInActionGap, gameState.isInCountdown) {
-                    if (!gameState.isInActionGap && !gameState.isInCountdown) {
+                .pointerInput(gameState.isInActionGap, gameState.isInCountdown, gameState.isPaused) {
+                    if (!gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()
                             val (x, y) = dragAmount
@@ -332,7 +388,7 @@ fun GameArea(
                 .size(300.dp)
                 .shadow(8.dp, CircleShape)
                 .background(Color.Red, CircleShape)
-                .clickable(enabled = !gameState.isInActionGap && !gameState.isInCountdown) {
+                .clickable(enabled = !gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused) {
                     currentAction?.let {
                             onActionPerformed(GameAction.WHAAP)
                     }
@@ -378,25 +434,34 @@ fun GameScreen(
 ) {
     val context = LocalContext.current
     var gameState by remember { mutableStateOf(GameState()) }
+    var showPauseMenu by remember { mutableStateOf(false) }
 
-    LaunchedEffect(gameState.isGameActive) {
+    LaunchedEffect(gameState.isInCountdown, gameState.isPaused) {
+        if (gameState.isInCountdown && !gameState.isPaused) {
+            for (i in gameState.countdown downTo 1) {
+                delay(1000L)
+                if (gameState.isInCountdown && !gameState.isPaused) {
+                    gameState = gameState.copy(countdown = i - 1)
+                    SoundManager.playButtonClick()
+                }
+            }
+            delay(1000L)
+            if (gameState.isInCountdown && !gameState.isPaused) {
+                gameState = gameState.copy(isInCountdown = false)
+                gameState.currentAction?.playSound()
+            }
+        }
+    }
+
+    LaunchedEffect(gameState.isGameActive, gameState.isPaused, gameState.isInCountdown) {
         if (!gameState.isGameActive) {
             MusicManager.stopGameplayMusic()
         }
-        if (gameState.isGameActive) {
-            while (gameState.isGameActive && gameState.totalTimeRemaining > 0) {
+        if (gameState.isGameActive && !gameState.isPaused && !gameState.isInCountdown) {
+            while (gameState.isGameActive && gameState.totalTimeRemaining > 0 && !gameState.isPaused && !gameState.isInCountdown) {
                 delay(16L)
 
-                if (gameState.isInCountdown) {
-                    if (gameState.countdown > 0) {
-                        delay(1000L)
-                        gameState = gameState.copy(countdown = gameState.countdown - 1)
-                        SoundManager.playButtonClick()
-                    } else {
-                        gameState = gameState.copy(isInCountdown = false)
-                        gameState.currentAction?.playSound()
-                    }
-                } else if (gameState.isInActionGap) {
+                if (gameState.isInActionGap) {
                     val newGapTime = (gameState.gapTimeRemaining - 0.016f).coerceAtLeast(0f)
 
                     gameState = gameState.copy(gapTimeRemaining = newGapTime)
@@ -428,9 +493,38 @@ fun GameScreen(
 
     LaunchedEffect(Unit) {
         if (!gameState.isGameActive && gameState.currentAction == null) {
-            startGame { newState -> gameState = newState }
+            startGame { newState -> gameState = newState.copy(
+                countdown = 3,
+                isInCountdown = true,
+                isPaused = false
+            ) }
             MusicManager.startGameplayMusic(context)
         }
+    }
+
+    val onMenuClick = {
+        if (gameState.isGameActive && !gameState.isInCountdown) {
+            gameState = gameState.copy(isPaused = true)
+            showPauseMenu = true
+            MusicManager.pauseGameplayMusic()
+        }
+    }
+
+    val onResumeGame = {
+        showPauseMenu = false
+        gameState = gameState.copy(
+            isPaused = false,
+            isInCountdown = true,
+            countdown = 3
+        )
+        MusicManager.resumeGameplayMusic()
+    }
+
+    val onBackToHome = {
+        showPauseMenu = false
+        MusicManager.stopGameplayMusic()
+        MusicManager.startMenuMusic(context)
+        onNavigateToHome()
     }
 
     if (!gameState.isGameActive) {
@@ -444,7 +538,8 @@ fun GameScreen(
                         MusicManager.startGameplayMusic(context)
                         startGame { newState -> gameState = newState.copy(
                             countdown = 3,
-                            isInCountdown = true
+                            isInCountdown = true,
+                            isPaused = false
                         ) }
                     }
                 ) {
@@ -464,6 +559,12 @@ fun GameScreen(
         )
     }
 
+    if (showPauseMenu) {
+        PauseMenuDialog(
+            onResume = onResumeGame,
+            onBackToHome = onBackToHome
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -473,11 +574,7 @@ fun GameScreen(
         GameHeader(
             score = gameState.score,
             totalTimeRemaining = gameState.totalTimeRemaining,
-            onBackClick = {
-                MusicManager.stopGameplayMusic()
-                MusicManager.startMenuMusic(context)
-                onNavigateToHome()
-            }
+            onMenuClick = onMenuClick,
         )
 
         GameArea(

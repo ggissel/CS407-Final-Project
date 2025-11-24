@@ -42,6 +42,9 @@ object MusicManager {
         }
     }
 
+    fun resumeGameplayMusic() {
+        mediaPlayer?.start()
+    }
     fun pauseGameplayMusic() {
         mediaPlayer?.pause()
     }
