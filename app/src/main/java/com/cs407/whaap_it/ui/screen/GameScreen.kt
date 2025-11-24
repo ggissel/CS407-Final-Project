@@ -45,7 +45,8 @@ data class GameState(
     val gapTimeRemaining: Float = 0f,
     val countdown: Int = 3,
     val isInCountdown: Boolean = true,
-    val isPaused: Boolean = false
+    val isPaused: Boolean = false,
+    val lastPerformedAction: GameAction? = null
 )
 
 /**
@@ -160,7 +161,8 @@ private fun handleAction(
                 score = newScore,
                 isInActionGap = true,
                 gapTimeRemaining = 1f,
-                currentAction = null
+                currentAction = null,
+                lastPerformedAction = performedAction
             )
         )
         SoundManager.playButtonClick()
@@ -335,7 +337,7 @@ fun GameArea(
                 },
             contentAlignment = Alignment.Center
         ) {
-            if (gameState.isInActionGap) {
+            if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.TWIST) {
                 Text("Owh!", fontSize = 60.sp, color = Color.Green) // Success indicator
             } else {
                 Text(
@@ -370,7 +372,7 @@ fun GameArea(
                 },
             contentAlignment = Alignment.Center
         ) {
-            if (gameState.isInActionGap) {
+            if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.PULL) {
                 Text("Eeek!", fontSize = 60.sp, color = Color.Green)
             } else {
                 Text(
@@ -395,7 +397,7 @@ fun GameArea(
                 },
             contentAlignment = Alignment.Center
         ) {
-            if (gameState.isInActionGap) {
+            if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.WHAAP) {
                 Text("Ouch!", fontSize = 80.sp, color = Color.Green)
             } else {
                 Column(
