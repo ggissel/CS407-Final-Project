@@ -41,7 +41,9 @@ data class GameState(
     val actions: List<GameAction> = emptyList(),
     val currentActionIndex: Int = 0,
     val isInActionGap: Boolean = false,
-    val gapTimeRemaining: Float = 0f
+    val gapTimeRemaining: Float = 0f,
+    val countdown: Int = 3,
+    val isInCountdown: Boolean = true
 )
 
 /**
@@ -54,7 +56,9 @@ enum class GameAction(val displayName: String, val points: Int, val playSound: (
     // Add more Game Actions in the future...
 }
 
-// Generate a single random action
+/**
+ * Random action generator. Returns a random Game Action.
+ */
 private fun generateRandomAction(): GameAction {
     return when (Random.nextInt(3)) {
         0 -> GameAction.WHAAP
@@ -63,7 +67,9 @@ private fun generateRandomAction(): GameAction {
     }
 }
 
-// Generate initial batch of actions
+/**
+ * Generates first 10 Game Actions of a game session
+ */
 private fun generateInitialActions(): List<GameAction> {
     return List(10) { generateRandomAction() } // Start with 10 actions
 }
@@ -82,10 +88,12 @@ private fun startGame(onStateUpdate: (GameState) -> Unit) {
             currentAction = firstAction,
             actionTimeRemaining = 3f,
             totalTimeRemaining = 60f,
+            countdown = 3,
+            isInCountdown = true
         )
     )
 
-    firstAction?.playSound()
+    //firstAction?.playSound()
 }
 
 /**
@@ -167,6 +175,28 @@ private fun handleAction(
     }
 }
 
+@Composable
+fun CountdownOverlay(
+    countdown: Int,
+    isVisible: Boolean
+) {
+    if (isVisible) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Gray.copy(alpha = 0.4f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (countdown > 0) countdown.toString() else "Go!",
+                fontSize = 120.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+    }
+}
+
 /**
  * The Game Header shows the user's current score and the time remaining for the game.
  * It also currently holds the arrowback button to return to the home screen.
@@ -233,8 +263,8 @@ fun GameArea(
                 .fillMaxWidth()
                 .fillMaxHeight(0.5f)
                 .background(Color.Yellow)
-                .pointerInput(gameState.isInActionGap) {
-                    if (!gameState.isInActionGap) {
+                .pointerInput(gameState.isInActionGap, gameState.isInCountdown) {
+                    if (!gameState.isInActionGap && !gameState.isInCountdown) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()
                             val (x, y) = dragAmount
@@ -268,8 +298,8 @@ fun GameArea(
                 .fillMaxWidth()
                 .fillMaxHeight(0.5f)
                 .background(Color.Blue)
-                .pointerInput(gameState.isInActionGap) {
-                    if (!gameState.isInActionGap) {
+                .pointerInput(gameState.isInActionGap, gameState.isInCountdown) {
+                    if (!gameState.isInActionGap && !gameState.isInCountdown) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()
                             val (x, y) = dragAmount
@@ -302,7 +332,7 @@ fun GameArea(
                 .size(300.dp)
                 .shadow(8.dp, CircleShape)
                 .background(Color.Red, CircleShape)
-                .clickable(enabled = !gameState.isInActionGap) {
+                .clickable(enabled = !gameState.isInActionGap && !gameState.isInCountdown) {
                     currentAction?.let {
                             onActionPerformed(GameAction.WHAAP)
                     }
@@ -333,6 +363,11 @@ fun GameArea(
                 }
             }
         }
+
+        CountdownOverlay(
+            countdown = gameState.countdown,
+            isVisible = gameState.isInCountdown
+        )
     }
 }
 
@@ -352,7 +387,16 @@ fun GameScreen(
             while (gameState.isGameActive && gameState.totalTimeRemaining > 0) {
                 delay(16L)
 
-                if (gameState.isInActionGap) {
+                if (gameState.isInCountdown) {
+                    if (gameState.countdown > 0) {
+                        delay(1000L)
+                        gameState = gameState.copy(countdown = gameState.countdown - 1)
+                        SoundManager.playButtonClick()
+                    } else {
+                        gameState = gameState.copy(isInCountdown = false)
+                        gameState.currentAction?.playSound()
+                    }
+                } else if (gameState.isInActionGap) {
                     val newGapTime = (gameState.gapTimeRemaining - 0.016f).coerceAtLeast(0f)
 
                     gameState = gameState.copy(gapTimeRemaining = newGapTime)
@@ -398,7 +442,10 @@ fun GameScreen(
                 Button(
                     onClick = {
                         MusicManager.startGameplayMusic(context)
-                        startGame { newState -> gameState = newState }
+                        startGame { newState -> gameState = newState.copy(
+                            countdown = 3,
+                            isInCountdown = true
+                        ) }
                     }
                 ) {
                     Text("Play Again")
