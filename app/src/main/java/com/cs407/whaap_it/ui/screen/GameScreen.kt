@@ -155,13 +155,15 @@ private fun handleAction(
         )
         SoundManager.playButtonClick()
     } else {
-        SoundManager.playWeakGameOver()
-        onStateUpdate(
-            currentState.copy(
-                isGameActive = false,
-                currentAction = null
+        if (currentState.isGameActive) {
+            SoundManager.playWeakGameOver()
+            onStateUpdate(
+                currentState.copy(
+                    isGameActive = false,
+                    currentAction = null
+                )
             )
-        )
+        }
     }
 }
 

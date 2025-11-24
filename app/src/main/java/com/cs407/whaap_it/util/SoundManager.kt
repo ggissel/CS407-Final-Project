@@ -32,6 +32,8 @@ object SoundManager {
 
     private var cartoonJumpSound: Int = 0
 
+    private var failTrumpetSound: Int = 0
+
     fun init(context: Context) {
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_GAME)
@@ -65,6 +67,8 @@ object SoundManager {
         swipeSound = soundPool.load(context, R.raw.swipe, 1)
 
         cartoonJumpSound = soundPool.load(context, R.raw.cartoon_jump, 1)
+
+        failTrumpetSound = soundPool.load(context, R.raw.fail_trumpet, 1)
     }
 
     fun playButtonClick() {
@@ -93,10 +97,12 @@ object SoundManager {
 
     fun playWeakGameOver() {
         soundPool.play(weakGameOverSound, 1f, 1f, 1, 0, 1f)
+        soundPool.play(failTrumpetSound, 1f, 1f, 1, 0, 1f)
     }
 
     fun tooSlowGameOver() {
         soundPool.play(tooSlowSound, 1f, 1f, 1, 0, 1f)
+        soundPool.play(failTrumpetSound, 1f, 1f, 1, 0, 1f)
     }
 
     fun zipperSquealSound() {
@@ -109,6 +115,10 @@ object SoundManager {
 
     fun cartoonJumpSound() {
         soundPool.play(cartoonJumpSound, 1f, 1f, 1, 0, 1f)
+    }
+
+    fun failTrumpetSound() {
+        soundPool.play(failTrumpetSound, 1f, 1f, 1, 0, 1f)
     }
 
     fun release() {
