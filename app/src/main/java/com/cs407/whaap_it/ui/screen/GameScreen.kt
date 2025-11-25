@@ -3,6 +3,7 @@ package com.cs407.whaap_it.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +30,37 @@ import com.cs407.whaap_it.util.MusicManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
 
+// How many actions performed before the next difficulty level
+private const val ACTIONS_BEFORE_FAST = 10
+private const val ACTIONS_BEFORE_VERY_FAST = 25
+private const val ACTIONS_BEFORE_SUPER_FAST = 45
+
+/**
+ * Determines current game difficulty
+ */
+private fun getDifficultyForAction(actionIndex: Int): DifficultyLevel {
+    return when {
+        actionIndex >= ACTIONS_BEFORE_SUPER_FAST -> DifficultyLevel.SUPER_FAST
+        actionIndex >= ACTIONS_BEFORE_VERY_FAST -> DifficultyLevel.VERY_FAST
+        actionIndex >= ACTIONS_BEFORE_FAST -> DifficultyLevel.FAST
+        else -> DifficultyLevel.NORMAL
+    }
+}
+
+/**
+ * Storing different difficulty levels (NORMAL, FAST, VERY FAST)
+ */
+enum class DifficultyLevel(
+    val displayName: String,
+    val actionTime: Float,
+    val gapTime: Float,
+    val pointsMultiplier: Float = 1f
+) {
+    NORMAL("Normal", 3f, 1f, 1f),
+    FAST("Fast", 2f, 0.7f, 1.2f),
+    VERY_FAST("Very Fast", 1.5f, 0.5f, 1.5f),
+    SUPER_FAST("Super Fast", 2f, 0.5f, 2f)
+}
 
 /**
  * Keeps track of the overall game state, such as the current score, action, time remaining.
@@ -46,7 +78,10 @@ data class GameState(
     val countdown: Int = 3,
     val isInCountdown: Boolean = true,
     val isPaused: Boolean = false,
-    val lastPerformedAction: GameAction? = null
+    val lastPerformedAction: GameAction? = null,
+    val currentDifficulty: DifficultyLevel = DifficultyLevel.NORMAL,
+    val isInIntermission: Boolean = false,
+    val intermissionCountdown: Int = 0
 )
 
 /**
@@ -120,18 +155,32 @@ private fun nextAction(currentState: GameState, onStateUpdate: (GameState) -> Un
     }
 
     if (nextAction != null) {
-        nextAction.playSound()
+        val nextDifficulty = getDifficultyForAction(nextIndex)
 
-        onStateUpdate(
-            currentState.copy(
-                currentAction = nextAction,
-                currentActionIndex = nextIndex,
-                actions = nextActions,
-                actionTimeRemaining = 3f,
-                isInActionGap = false,
-                gapTimeRemaining = 0f
+        if (nextDifficulty != currentState.currentDifficulty && !currentState.isInIntermission) {
+            onStateUpdate(
+                currentState.copy(
+                    isInIntermission = true,
+                    intermissionCountdown = 5,
+                    currentAction = null,
+                    currentDifficulty = nextDifficulty
+                )
             )
-        )
+        } else {
+            nextAction.playSound()
+
+            onStateUpdate(
+                currentState.copy(
+                    currentAction = nextAction,
+                    currentActionIndex = nextIndex,
+                    actions = nextActions,
+                    actionTimeRemaining = nextDifficulty.actionTime,
+                    isInActionGap = false,
+                    gapTimeRemaining = 0f,
+                    currentDifficulty = nextDifficulty
+                )
+            )
+        }
     } else {
         onStateUpdate(
             currentState.copy(
@@ -154,7 +203,9 @@ private fun handleAction(
     val currentAction = currentState.currentAction
 
     if (currentAction == performedAction) {
-        val newScore = currentState.score + performedAction.points
+        val basePoints = performedAction.points
+        val multipledPoints = (basePoints * currentState.currentDifficulty.pointsMultiplier).toInt()
+        val newScore = currentState.score + multipledPoints
         currentAction.playActionSound()
         onStateUpdate(
             currentState.copy(
@@ -166,6 +217,7 @@ private fun handleAction(
             )
         )
         SoundManager.playButtonClick()
+
     } else {
         if (currentState.isGameActive) {
             SoundManager.playWeakGameOver()
@@ -179,6 +231,54 @@ private fun handleAction(
     }
 }
 
+/**
+ * This is the overlay that is displayed when the game is in intermission (between difficulty levels)
+ */
+@Composable
+fun IntermissionOverlay(
+    timeRemaining: Int,
+    nextDifficulty: DifficultyLevel,
+    isVisible: Boolean
+) {
+    if (isVisible) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Gray.copy(alpha = 0.4f))
+                .pointerInput(Unit) {
+                    detectTapGestures { }
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Get Ready for",
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = "${nextDifficulty.displayName} Speed!",
+                    fontSize = 48.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+                Text(
+                    text = "Relax: ${timeRemaining}s",
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Countdown overlay displayed before the start of the game and when resuming a game from the pause menu.
+ * It shows a countdown timer (3->2->1)
+ */
 @Composable
 fun CountdownOverlay(
     countdown: Int,
@@ -321,8 +421,8 @@ fun GameArea(
                 .fillMaxWidth()
                 .fillMaxHeight(0.5f)
                 .background(Color.Yellow)
-                .pointerInput(gameState.isInActionGap, gameState.isInCountdown, gameState.isPaused) {
-                    if (!gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused) {
+                .pointerInput(gameState.isInActionGap, gameState.isInCountdown, gameState.isPaused, gameState.isInIntermission) {
+                    if (!gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()
                             val (x, y) = dragAmount
@@ -356,8 +456,8 @@ fun GameArea(
                 .fillMaxWidth()
                 .fillMaxHeight(0.5f)
                 .background(Color.Blue)
-                .pointerInput(gameState.isInActionGap, gameState.isInCountdown, gameState.isPaused) {
-                    if (!gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused) {
+                .pointerInput(gameState.isInActionGap, gameState.isInCountdown, gameState.isPaused, gameState.isInIntermission) {
+                    if (!gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()
                             val (x, y) = dragAmount
@@ -390,7 +490,7 @@ fun GameArea(
                 .size(300.dp)
                 .shadow(8.dp, CircleShape)
                 .background(Color.Red, CircleShape)
-                .clickable(enabled = !gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused) {
+                .clickable(enabled = !gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission) {
                     currentAction?.let {
                             onActionPerformed(GameAction.WHAAP)
                     }
@@ -421,6 +521,12 @@ fun GameArea(
                 }
             }
         }
+
+        IntermissionOverlay(
+            timeRemaining = gameState.intermissionCountdown,
+            nextDifficulty = getDifficultyForAction(gameState.currentActionIndex + 1),
+            isVisible = gameState.isInIntermission
+        )
 
         CountdownOverlay(
             countdown = gameState.countdown,
@@ -455,12 +561,32 @@ fun GameScreen(
         }
     }
 
-    LaunchedEffect(gameState.isGameActive, gameState.isPaused, gameState.isInCountdown) {
+    LaunchedEffect(gameState.isInIntermission, gameState.isPaused) {
+        if (gameState.isInIntermission && !gameState.isPaused) {
+            var remainingTime = gameState.intermissionCountdown
+
+            while (remainingTime > 0 && gameState.isInIntermission && !gameState.isPaused) {
+                delay(1000L)
+                if (gameState.isInIntermission && !gameState.isPaused) {
+                    remainingTime--
+                    gameState = gameState.copy(intermissionCountdown = remainingTime)
+                }
+            }
+
+            if (gameState.isInIntermission && !gameState.isPaused) {
+                gameState = gameState.copy(isInIntermission = false)
+                SoundManager.playButtonClick()
+                nextAction(gameState) { newState -> gameState = newState }
+            }
+        }
+    }
+
+    LaunchedEffect(gameState.isGameActive, gameState.isPaused, gameState.isInCountdown, gameState.isInIntermission) {
         if (!gameState.isGameActive) {
             MusicManager.stopGameplayMusic()
         }
         if (gameState.isGameActive && !gameState.isPaused && !gameState.isInCountdown) {
-            while (gameState.isGameActive && gameState.totalTimeRemaining > 0 && !gameState.isPaused && !gameState.isInCountdown) {
+            while (gameState.isGameActive && gameState.totalTimeRemaining > 0 && !gameState.isPaused && !gameState.isInCountdown && !gameState.isInIntermission) {
                 delay(16L)
 
                 if (gameState.isInActionGap) {
@@ -514,11 +640,16 @@ fun GameScreen(
 
     val onResumeGame = {
         showPauseMenu = false
-        gameState = gameState.copy(
-            isPaused = false,
-            isInCountdown = true,
-            countdown = 3
-        )
+
+        if (gameState.isInIntermission) {
+            gameState = gameState.copy(isPaused = false)
+        } else {
+            gameState = gameState.copy(
+                isPaused = false,
+                isInCountdown = true,
+                countdown = 3
+            )
+        }
         MusicManager.resumeGameplayMusic()
     }
 
