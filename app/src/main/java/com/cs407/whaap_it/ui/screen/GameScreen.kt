@@ -1,8 +1,11 @@
 package com.cs407.whaap_it.ui.screen
 
+import android.graphics.Canvas
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -20,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -440,6 +445,119 @@ fun WhaapItButton(
     }
 }
 
+@Composable
+fun SpringVisualization(
+    isPulled: Boolean,
+    pullDistance: Float,
+    modifier: Modifier = Modifier
+) {
+    val springColor = if (isPulled) Color.Yellow else Color.White
+    val springWidth by animateDpAsState(
+        targetValue = if (isPulled) 8.dp else 4.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "springWidth"
+    )
+
+    Canvas(modifier = modifier.height(60.dp).width(springWidth)) {
+        val canvasWidth = size.width
+        val canvasHeight = size.height
+
+        val coilCount = 8
+        val maxPull = 150f
+        val tension = (pullDistance / maxPull).coerceIn(0f, 1f)
+
+        val coilSpacing = canvasHeight / coilCount * (1 + tension * 0.5f)
+
+        drawRect(
+            color = springColor,
+            topLeft = Offset(0f, 0f),
+            size = Size(canvasWidth, canvasHeight)
+        )
+
+        for (i in 0 until coilCount) {
+            val yPos = i * coilSpacing
+            drawCircle(
+                color = Color.Red,
+                center = Offset(canvasWidth / 2, yPos),
+                radius = if (i % 2 == 0) 3.dp.toPx() else 2.dp.toPx()
+            )
+        }
+    }
+}
+
+@Composable
+fun PullItSpring(
+    isEnabled: Boolean,
+    currentAction: GameAction?,
+    gameState: GameState,
+    onActionPerformed: () -> Unit
+) {
+    var offsetY by remember { mutableStateOf(0f) }
+    var isDragging by remember { mutableStateOf(false) }
+
+    val animatedOffsetY by animateFloatAsState(
+        targetValue = offsetY,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "springPull"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.5f)
+            .offset(y = animatedOffsetY.dp)
+            .background(Color.Blue)
+            .pointerInput(isEnabled, currentAction) {
+                if (isEnabled) {
+                    detectDragGestures (
+                        onDragStart = {
+                        },
+                        onDragEnd = {
+                            offsetY = 0f
+
+                            if (animatedOffsetY > 10) {
+                                onActionPerformed()
+                            }
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            val (x, y) = dragAmount
+
+                            if (y > 0) {
+                                offsetY = y.coerceAtMost(500f)
+                            }
+                        }
+                    )
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        /**
+         *         SpringVisualization(
+         *             isPulled = isDragging,
+         *             pullDistance = animatedOffsetY,
+         *             modifier = Modifier.align(Alignment.TopCenter)
+         *         )
+         */
+
+        if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.PULL) {
+            Text("Eeek!", fontSize = 60.sp, color = Color.Green)
+        } else {
+            Text(
+                text = currentAction?.takeIf { it == GameAction.PULL }?.displayName ?: "Pull-it!",
+                fontSize = 40.sp,
+                color = Color.White
+            )
+        }
+    }
+}
+
 /**
  * The Game Header shows the user's current score and the time remaining for the game.
  * It also currently holds the arrowback button to return to the home screen.
@@ -534,38 +652,20 @@ fun GameArea(
             }
         }
 
-        // Blue Bottom Half - Pull It (clickable)
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .fillMaxHeight(0.5f)
-                .background(Color.Blue)
-                .pointerInput(gameState.isInActionGap, gameState.isInCountdown, gameState.isPaused, gameState.isInIntermission) {
-                    if (!gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            val (x, y) = dragAmount
-                            // Detect downward swipe
-                            if (y > abs(x) && y > 50) {
-                                currentAction?.let {
-                                    onActionPerformed(GameAction.PULL)
-                                }
-                            }
-                        }
-                    }
-                },
-            contentAlignment = Alignment.Center
         ) {
-            if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.PULL) {
-                Text("Eeek!", fontSize = 60.sp, color = Color.Green)
-            } else {
-                Text(
-                    text = currentAction?.takeIf { it == GameAction.PULL }?.displayName ?: "Pull-it!",
-                    fontSize = 40.sp,
-                    color = Color.White
-                )
-            }
+            PullItSpring(
+                isEnabled = !gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission,
+                currentAction = currentAction,
+                gameState = gameState,
+                onActionPerformed = {
+                    currentAction?.let {
+                        onActionPerformed(GameAction.PULL)
+                    }
+                }
+            )
         }
 
         Box(
