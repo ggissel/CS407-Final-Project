@@ -1,5 +1,8 @@
 package com.cs407.whaap_it.ui.screen
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -15,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -355,6 +359,87 @@ fun PauseMenuDialog(
     }
 }
 
+@Composable
+fun WhaapItButton(
+    isEnabled: Boolean,
+    currentAction: GameAction?,
+    gameState: GameState,
+    onActionPerformed: () -> Unit,
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.85f else 1f,
+        animationSpec = spring(
+            dampingRatio = 0.5f,
+            stiffness = 1000f
+        ),
+        label = "whaapButtonScale"
+    )
+
+    val elevation by animateDpAsState(
+        targetValue = if (isPressed) 2.dp else 8.dp,
+        animationSpec = spring(
+            dampingRatio = 0.5f,
+            stiffness = 1000f
+        ),
+        label = "whaapButtonElevation"
+    )
+
+    // Red Circle - Whaap It (clickable, overlaps both areas)
+    Box(
+        modifier = Modifier
+            .size(300.dp)
+            .scale(scale)
+            .shadow(
+                elevation = elevation,
+                shape = CircleShape,
+                clip = false
+            )
+            .background(Color.Red, CircleShape)
+            .pointerInput(isEnabled) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        try {
+                            awaitRelease()
+                        } finally {
+                            isPressed = false
+                        }
+                    },
+                    onTap = {
+                        onActionPerformed()
+                    }
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.WHAAP) {
+            Text("Ouch!", fontSize = 80.sp, color = Color.Green)
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = currentAction?.takeIf { it == GameAction.WHAAP }?.displayName ?: "Whaap-it!",
+                    color = Color.White,
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                if (currentAction != null) {
+                    Text(
+                        text = "${gameState.actionTimeRemaining.toInt()}s",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
 /**
  * The Game Header shows the user's current score and the time remaining for the game.
  * It also currently holds the arrowback button to return to the home screen.
@@ -483,43 +568,22 @@ fun GameArea(
             }
         }
 
-        // Red Circle - Whaap It (clickable, overlaps both areas)
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(300.dp)
-                .shadow(8.dp, CircleShape)
-                .background(Color.Red, CircleShape)
-                .clickable(enabled = !gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission) {
-                    currentAction?.let {
-                            onActionPerformed(GameAction.WHAAP)
-                    }
-                },
+                .size(300.dp), // Same size as the button
             contentAlignment = Alignment.Center
         ) {
-            if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.WHAAP) {
-                Text("Ouch!", fontSize = 80.sp, color = Color.Green)
-            } else {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = currentAction?.takeIf { it == GameAction.WHAAP }?.displayName ?: "Whaap-it!",
-                        color = Color.White,
-                        fontSize = 40.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    if (currentAction != null) {
-                        Text(
-                            text = "${gameState.actionTimeRemaining.toInt()}s",
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
+            WhaapItButton(
+                isEnabled = !gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission,
+                currentAction = currentAction,
+                gameState = gameState,
+                onActionPerformed = {
+                    currentAction?.let {
+                        onActionPerformed(GameAction.WHAAP)
                     }
                 }
-            }
+            )
         }
 
         IntermissionOverlay(
