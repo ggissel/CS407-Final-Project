@@ -4,8 +4,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
@@ -19,7 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -187,6 +200,70 @@ fun AppNavigation(
 }
 
 @Composable
+fun SimpleFloatingButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isPrimary: Boolean = true,
+    content: @Composable RowScope.() -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    // Press animations
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.5f else 1f,
+        animationSpec = spring(Spring.DampingRatioMediumBouncy),
+        label = "buttonScale"
+    )
+
+    // Floating animation
+    val infiniteTransition = rememberInfiniteTransition(label = "floating")
+    val floatOffset by infiniteTransition.animateFloat(
+        initialValue = -3f,
+        targetValue = 3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "floatOffset"
+    )
+
+    val buttonModifier = modifier
+        .scale(scale)
+        .offset(y = floatOffset.dp)
+        .pointerInput(Unit) {
+            detectTapGestures(
+                onPress = {
+                    isPressed = true
+                    try {
+                        awaitRelease()
+                    } finally {
+                        isPressed = false
+                    }
+                },
+                onTap = { onClick() }
+            )
+        }
+
+    if (isPrimary) {
+        Button(
+            onClick = onClick,
+            modifier = buttonModifier,
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            content()
+        }
+    } else {
+        OutlinedButton(
+            onClick = onClick,
+            modifier = buttonModifier,
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
 fun StartScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToGameScreen: () -> Unit = {},
@@ -209,14 +286,41 @@ fun StartScreen(
             )
         }
 
-        Button(
+        /**
+         *         Button(
+         *             onClick = {
+         *                 SoundManager.playButtonClick() // Play button click sound
+         *                 MusicManager.stopMenuMusic() //stop menu music when entering GameScreen
+         *                 onNavigateToGameScreen()},
+         *             modifier = Modifier
+         *                 .fillMaxWidth()
+         *                 .height(56.dp)
+         *         ) {
+         *             Icon(
+         *                 imageVector = Icons.Default.PlayArrow,
+         *                 contentDescription = "Play",
+         *                 modifier = Modifier.size(24.dp)
+         *             )
+         *             Spacer(modifier = Modifier.width(8.dp))
+         *             Text(
+         *                 text = "PLAY",
+         *                 fontSize = 20.sp,
+         *                 fontWeight = FontWeight.Bold
+         *             )
+         *         }
+         */
+
+        // Play Button (Primary)
+        SimpleFloatingButton (
             onClick = {
-                SoundManager.playButtonClick() // Play button click sound
-                MusicManager.stopMenuMusic() //stop menu music when entering GameScreen
-                onNavigateToGameScreen()},
+                SoundManager.playButtonClick()
+                MusicManager.stopMenuMusic()
+                onNavigateToGameScreen()
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(56.dp),
+            isPrimary = true
         ) {
             Icon(
                 imageVector = Icons.Default.PlayArrow,
