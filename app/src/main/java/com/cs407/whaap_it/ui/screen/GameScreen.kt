@@ -1,6 +1,7 @@
 package com.cs407.whaap_it.ui.screen
 
 import android.graphics.Canvas
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -17,10 +18,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -558,6 +561,107 @@ fun PullItSpring(
     }
 }
 
+@Composable
+fun TwistItRotation(
+    isEnabled: Boolean,
+    currentAction: GameAction?,
+    gameState: GameState,
+    onActionPerformed: () -> Unit
+) {
+    var rotation by remember { mutableStateOf(0f) }
+
+    val animatedRotation by animateFloatAsState(
+        targetValue = rotation,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "twistRotation"
+    )
+
+    val iconColor by animateColorAsState(
+        targetValue = when {
+            abs(animatedRotation) > 60f -> Color.Red
+            abs(animatedRotation) > 30f -> Color(0xFFFFA000) // Orange
+            else -> Color.Black
+        },
+        label = "iconColor"
+    )
+
+    val iconSize by animateDpAsState(
+        targetValue = when {
+            abs(animatedRotation) > 60f -> 80.dp
+            abs(animatedRotation) > 30f -> 70.dp
+            else -> 60.dp
+        },
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "iconSize"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.5f)
+            .background(Color.Yellow)
+            .rotate(animatedRotation)
+            .pointerInput(isEnabled) {
+                if (isEnabled) {
+                    detectDragGestures(
+                        onDragStart = { },
+                        onDragEnd = {
+                            rotation = 0f // Spring back to center
+                            if (abs(animatedRotation) > 10) {
+                                onActionPerformed()
+                            }
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            val (x, y) = dragAmount
+                            if (abs(x) > abs(y)) { // Horizontal movement controls rotation
+                                // Convert horizontal drag to rotation (more drag = more rotation)
+                                rotation = (x).coerceIn(-90f, 90f)
+                            }
+                        }
+                    )
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        //RotationIndicators(rotation = animatedRotation)
+
+        if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.TWIST) {
+            Text("Owh!", fontSize = 60.sp, color = Color.Green) // Success indicator
+        } else {
+            Icon(
+                imageVector = Icons.Default.Refresh, // Circular arrow icon
+                contentDescription = "Twist it",
+                tint = iconColor,
+                modifier = Modifier.size(iconSize)
+            )
+        }
+    }
+}
+
+@Composable
+fun RotationIndicators(rotation: Float) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Left arrow (rotates with content)
+        Text(
+            "↶",
+            modifier = Modifier.align(Alignment.CenterStart).padding(16.dp),
+            fontSize = 30.sp,
+            color = Color.Black.copy(alpha = 0.7f)
+        )
+        // Right arrow (rotates with content)
+        Text(
+            "↷",
+            modifier = Modifier.align(Alignment.CenterEnd).padding(16.dp),
+            fontSize = 30.sp,
+            color = Color.Black.copy(alpha = 0.7f)
+        )
+    }
+}
+
 /**
  * The Game Header shows the user's current score and the time remaining for the game.
  * It also currently holds the arrowback button to return to the home screen.
@@ -617,39 +721,20 @@ fun GameArea(
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        // Yellow Top Half - Twist It (clickable)
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .fillMaxHeight(0.5f)
-                .background(Color.Yellow)
-                .pointerInput(gameState.isInActionGap, gameState.isInCountdown, gameState.isPaused, gameState.isInIntermission) {
-                    if (!gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            val (x, y) = dragAmount
-                            // Detect horizontal swipe (left or right)
-                            if (abs(x) > abs(y) && abs(x) > 50) {
-                                currentAction?.let {
-                                    onActionPerformed(GameAction.TWIST)
-                                }
-                            }
-                        }
-                    }
-                },
-            contentAlignment = Alignment.Center
         ) {
-            if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.TWIST) {
-                Text("Owh!", fontSize = 60.sp, color = Color.Green) // Success indicator
-            } else {
-                Text(
-                    text = currentAction?.takeIf { it == GameAction.TWIST }?.displayName ?: "Twist-it!",
-                    fontSize = 40.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-            }
+            TwistItRotation(
+                isEnabled = !gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission,
+                currentAction = currentAction,
+                gameState = gameState,
+                onActionPerformed = {
+                    currentAction?.let {
+                        onActionPerformed(GameAction.TWIST)
+                    }
+                }
+            )
         }
 
         Box(
