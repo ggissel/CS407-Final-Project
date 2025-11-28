@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,6 +24,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
@@ -711,38 +713,58 @@ fun TiledLogoBackground(
 fun GameHeader(
     score: Int,
     totalTimeRemaining: Float,
-    onMenuClick: () -> Unit
+    onMenuClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(80.dp)
-            .background(Color.DarkGray)
+            .background(Color.Transparent)
     ) {
         IconButton(
             onClick = onMenuClick,
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(8.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xFF6A1B9A)) // Purple color
+                .size(48.dp)
         ) {
             Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.White)
         }
-        Text(
-            text = "Score: ${score}",
+
+        Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(16.dp),
-            fontSize = 20.sp,
-            color = Color.White
-        )
-        Text(
-            text = "Time: ${totalTimeRemaining.toInt()}s",
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFF6A1B9A))
+                .padding(horizontal = 12.dp, vertical = 12.dp)
+        ) {
+            Text(
+                text = "Score: ${score}",
+                modifier = Modifier
+                    .align(Alignment.Center),
+                fontSize = 20.sp,
+                color = Color.White
+            )
+        }
+
+        Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .padding(16.dp),
-            fontSize = 20.sp,
-            color = Color.White
-        )
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFF6A1B9A))
+                .padding(horizontal = 12.dp, vertical = 12.dp)
+        ) {
+            Text(
+                text = "Time: ${totalTimeRemaining.toInt()}s",
+                modifier = Modifier
+                    .align(Alignment.CenterEnd),
+                fontSize = 20.sp,
+                color = Color.White
+            )
+        }
     }
 }
 
@@ -990,22 +1012,23 @@ fun GameScreen(
         )
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        GameHeader(
-            score = gameState.score,
-            totalTimeRemaining = gameState.totalTimeRemaining,
-            onMenuClick = onMenuClick,
-        )
-
         GameArea(
             gameState = gameState,
             onActionPerformed = { action ->
                 handleAction(action, gameState) { newState -> gameState = newState }
             }
+        )
+
+        GameHeader(
+            score = gameState.score,
+            totalTimeRemaining = gameState.totalTimeRemaining,
+            onMenuClick = onMenuClick,
+            modifier = Modifier.align(Alignment.TopCenter)
         )
     }
 }
