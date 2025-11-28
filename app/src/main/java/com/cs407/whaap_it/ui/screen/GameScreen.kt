@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,7 +41,12 @@ import kotlin.math.abs
 import kotlin.random.Random
 import com.cs407.whaap_it.util.MusicManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.window.Dialog
+import com.cs407.whaap_it.ui.screen.TiledLogoBackground
+import com.cs407.whaap_it.R
 
 // How many actions performed before the next difficulty level
 private const val ACTIONS_BEFORE_FAST = 10
@@ -662,6 +668,41 @@ fun RotationIndicators(rotation: Float) {
     }
 }
 
+@Composable
+fun TiledLogoBackground(
+    id: Int,
+    tileDensity: Int = 4
+) {
+    val context = LocalContext.current
+    val logoIMage = remember {
+        ImageBitmap.imageResource(context.resources, id)
+    }
+
+    Canvas(modifier = Modifier
+        .fillMaxSize()) {
+        val tileWidth = size.width / tileDensity
+        val tileHeight = tileWidth
+
+        val horizontalTiles = (size.width / tileWidth).toInt() + 1
+        val verticalTiles = (size.height / tileHeight).toInt() + 1
+
+        for (x in 0..horizontalTiles) {
+            for (y in 0..verticalTiles) {
+                drawImage(
+                    image = logoIMage,
+                    dstOffset = IntOffset(
+                        (x * tileWidth).toInt(),
+                        (y * tileHeight).toInt()
+                    ),
+                    dstSize = IntSize(tileWidth.toInt(), tileHeight.toInt()),
+                    alpha = 0.4f
+                )
+            }
+        }
+    }
+
+}
+
 /**
  * The Game Header shows the user's current score and the time remaining for the game.
  * It also currently holds the arrowback button to return to the home screen.
@@ -719,8 +760,9 @@ fun GameArea(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(Color.White)
     ) {
+        TiledLogoBackground(id = R.drawable.logo, tileDensity = 6)
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
