@@ -264,6 +264,36 @@ fun SimpleFloatingButton(
 }
 
 @Composable
+fun FloatingIcon(
+    modifier: Modifier = Modifier,
+    id: Int,
+    contentDescription: String,
+    contentScale: ContentScale
+) {
+    // Floating animation
+    val infiniteTransition = rememberInfiniteTransition(label = "floating")
+    val floatOffset by infiniteTransition.animateFloat(
+        initialValue = -3f,
+        targetValue = 3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "floatOffset"
+    )
+
+    Box {
+        Image(
+            painter = painterResource(id = id),
+            contentDescription = contentDescription,
+            contentScale = contentScale,
+            modifier = modifier
+                .offset(y = floatOffset.dp)
+        )
+    }
+}
+
+@Composable
 fun StartScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToGameScreen: () -> Unit = {},
@@ -276,41 +306,16 @@ fun StartScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Box {
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "whaap it logo",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(400.dp)
-            )
-        }
 
-        /**
-         *         Button(
-         *             onClick = {
-         *                 SoundManager.playButtonClick() // Play button click sound
-         *                 MusicManager.stopMenuMusic() //stop menu music when entering GameScreen
-         *                 onNavigateToGameScreen()},
-         *             modifier = Modifier
-         *                 .fillMaxWidth()
-         *                 .height(56.dp)
-         *         ) {
-         *             Icon(
-         *                 imageVector = Icons.Default.PlayArrow,
-         *                 contentDescription = "Play",
-         *                 modifier = Modifier.size(24.dp)
-         *             )
-         *             Spacer(modifier = Modifier.width(8.dp))
-         *             Text(
-         *                 text = "PLAY",
-         *                 fontSize = 20.sp,
-         *                 fontWeight = FontWeight.Bold
-         *             )
-         *         }
-         */
+        FloatingIcon(
+            modifier = Modifier
+                .size(400.dp),
+            id = R.drawable.logo,
+            contentDescription = "whaap it logo",
+            contentScale = ContentScale.Crop,
+        )
 
-        // Play Button (Primary)
+        // Play Button
         SimpleFloatingButton (
             onClick = {
                 SoundManager.playButtonClick()
@@ -337,14 +342,16 @@ fun StartScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedButton(
+        // Leaderboard Button
+        SimpleFloatingButton (
             onClick = {
                 SoundManager.playButtonClick() // Play button click sound
                 onNavigateToLeaderboard()
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(56.dp),
+            isPrimary = true
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.List,
@@ -361,14 +368,16 @@ fun StartScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedButton(
+        // Settings Button
+        SimpleFloatingButton (
             onClick = {
                 SoundManager.playButtonClick() // Play button click sound
                 onNavigateToSettings()
-                      },
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(56.dp),
+            isPrimary = true
         ) {
             Icon(
                 imageVector = Icons.Default.Settings,
