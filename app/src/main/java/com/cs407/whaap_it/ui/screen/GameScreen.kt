@@ -1,22 +1,37 @@
 package com.cs407.whaap_it.ui.screen
 
+import android.graphics.Canvas
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,7 +43,12 @@ import kotlin.math.abs
 import kotlin.random.Random
 import com.cs407.whaap_it.util.MusicManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.window.Dialog
+import com.cs407.whaap_it.ui.screen.TiledLogoBackground
+import com.cs407.whaap_it.R
 
 // How many actions performed before the next difficulty level
 private const val ACTIONS_BEFORE_FAST = 10
@@ -355,6 +375,336 @@ fun PauseMenuDialog(
     }
 }
 
+@Composable
+fun WhaapItButton(
+    isEnabled: Boolean,
+    currentAction: GameAction?,
+    gameState: GameState,
+    onActionPerformed: () -> Unit,
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.85f else 1f,
+        animationSpec = spring(
+            dampingRatio = 0.5f,
+            stiffness = 1000f
+        ),
+        label = "whaapButtonScale"
+    )
+
+    val elevation by animateDpAsState(
+        targetValue = if (isPressed) 2.dp else 8.dp,
+        animationSpec = spring(
+            dampingRatio = 0.5f,
+            stiffness = 1000f
+        ),
+        label = "whaapButtonElevation"
+    )
+
+    // Red Circle - Whaap It (clickable, overlaps both areas)
+    Box(
+        modifier = Modifier
+            .size(300.dp)
+            .scale(scale)
+            .shadow(
+                elevation = elevation,
+                shape = CircleShape,
+                clip = false
+            )
+            .background(Color.Red, CircleShape)
+            .pointerInput(isEnabled) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        try {
+                            awaitRelease()
+                        } finally {
+                            isPressed = false
+                        }
+                    },
+                    onTap = {
+                        onActionPerformed()
+                    }
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.WHAAP) {
+            Text("Ouch!", fontSize = 80.sp, color = Color.Green)
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = currentAction?.takeIf { it == GameAction.WHAAP }?.displayName ?: "Whaap-it!",
+                    color = Color.White,
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                if (currentAction != null) {
+                    Text(
+                        text = "${gameState.actionTimeRemaining.toInt()}s",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SpringVisualization(
+    isPulled: Boolean,
+    pullDistance: Float,
+    modifier: Modifier = Modifier
+) {
+    val springColor = if (isPulled) Color.Yellow else Color.White
+    val springWidth by animateDpAsState(
+        targetValue = if (isPulled) 8.dp else 4.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "springWidth"
+    )
+
+    Canvas(modifier = modifier.height(60.dp).width(springWidth)) {
+        val canvasWidth = size.width
+        val canvasHeight = size.height
+
+        val coilCount = 8
+        val maxPull = 150f
+        val tension = (pullDistance / maxPull).coerceIn(0f, 1f)
+
+        val coilSpacing = canvasHeight / coilCount * (1 + tension * 0.5f)
+
+        drawRect(
+            color = springColor,
+            topLeft = Offset(0f, 0f),
+            size = Size(canvasWidth, canvasHeight)
+        )
+
+        for (i in 0 until coilCount) {
+            val yPos = i * coilSpacing
+            drawCircle(
+                color = Color.Red,
+                center = Offset(canvasWidth / 2, yPos),
+                radius = if (i % 2 == 0) 3.dp.toPx() else 2.dp.toPx()
+            )
+        }
+    }
+}
+
+@Composable
+fun PullItSpring(
+    isEnabled: Boolean,
+    currentAction: GameAction?,
+    gameState: GameState,
+    onActionPerformed: () -> Unit
+) {
+    var offsetY by remember { mutableStateOf(0f) }
+    var isDragging by remember { mutableStateOf(false) }
+
+    val animatedOffsetY by animateFloatAsState(
+        targetValue = offsetY,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "springPull"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.5f)
+            .offset(y = animatedOffsetY.dp)
+            .background(Color.Blue)
+            .pointerInput(isEnabled, currentAction) {
+                if (isEnabled) {
+                    detectDragGestures (
+                        onDragStart = {
+                        },
+                        onDragEnd = {
+                            offsetY = 0f
+
+                            if (animatedOffsetY > 10) {
+                                onActionPerformed()
+                            }
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            val (x, y) = dragAmount
+
+                            if (y > 0) {
+                                offsetY = y.coerceAtMost(500f)
+                            }
+                        }
+                    )
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        /**
+         *         SpringVisualization(
+         *             isPulled = isDragging,
+         *             pullDistance = animatedOffsetY,
+         *             modifier = Modifier.align(Alignment.TopCenter)
+         *         )
+         */
+
+        if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.PULL) {
+            Text("Eeek!", fontSize = 60.sp, color = Color.Green)
+        } else {
+            Text(
+                text = currentAction?.takeIf { it == GameAction.PULL }?.displayName ?: "Pull-it!",
+                fontSize = 40.sp,
+                color = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+fun TwistItRotation(
+    isEnabled: Boolean,
+    currentAction: GameAction?,
+    gameState: GameState,
+    onActionPerformed: () -> Unit
+) {
+    var rotation by remember { mutableStateOf(0f) }
+
+    val animatedRotation by animateFloatAsState(
+        targetValue = rotation,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "twistRotation"
+    )
+
+    val iconColor by animateColorAsState(
+        targetValue = when {
+            abs(animatedRotation) > 60f -> Color.Red
+            abs(animatedRotation) > 30f -> Color(0xFFFFA000) // Orange
+            else -> Color.Black
+        },
+        label = "iconColor"
+    )
+
+    val iconSize by animateDpAsState(
+        targetValue = when {
+            abs(animatedRotation) > 60f -> 80.dp
+            abs(animatedRotation) > 30f -> 70.dp
+            else -> 60.dp
+        },
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "iconSize"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.5f)
+            .background(Color.Yellow)
+            .rotate(animatedRotation)
+            .pointerInput(isEnabled) {
+                if (isEnabled) {
+                    detectDragGestures(
+                        onDragStart = { },
+                        onDragEnd = {
+                            rotation = 0f // Spring back to center
+                            if (abs(animatedRotation) > 10) {
+                                onActionPerformed()
+                            }
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            val (x, y) = dragAmount
+                            if (abs(x) > abs(y)) { // Horizontal movement controls rotation
+                                // Convert horizontal drag to rotation (more drag = more rotation)
+                                rotation = (x).coerceIn(-90f, 90f)
+                            }
+                        }
+                    )
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        //RotationIndicators(rotation = animatedRotation)
+
+        if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.TWIST) {
+            Text("Owh!", fontSize = 60.sp, color = Color.Green) // Success indicator
+        } else {
+            Icon(
+                imageVector = Icons.Default.Refresh, // Circular arrow icon
+                contentDescription = "Twist it",
+                tint = iconColor,
+                modifier = Modifier.size(iconSize)
+            )
+        }
+    }
+}
+
+@Composable
+fun RotationIndicators(rotation: Float) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Left arrow (rotates with content)
+        Text(
+            "↶",
+            modifier = Modifier.align(Alignment.CenterStart).padding(16.dp),
+            fontSize = 30.sp,
+            color = Color.Black.copy(alpha = 0.7f)
+        )
+        // Right arrow (rotates with content)
+        Text(
+            "↷",
+            modifier = Modifier.align(Alignment.CenterEnd).padding(16.dp),
+            fontSize = 30.sp,
+            color = Color.Black.copy(alpha = 0.7f)
+        )
+    }
+}
+
+@Composable
+fun TiledLogoBackground(
+    id: Int,
+    tileDensity: Int = 4
+) {
+    val context = LocalContext.current
+    val logoIMage = remember {
+        ImageBitmap.imageResource(context.resources, id)
+    }
+
+    Canvas(modifier = Modifier
+        .fillMaxSize()) {
+        val tileWidth = size.width / tileDensity
+        val tileHeight = tileWidth
+
+        val horizontalTiles = (size.width / tileWidth).toInt() + 1
+        val verticalTiles = (size.height / tileHeight).toInt() + 1
+
+        for (x in 0..horizontalTiles) {
+            for (y in 0..verticalTiles) {
+                drawImage(
+                    image = logoIMage,
+                    dstOffset = IntOffset(
+                        (x * tileWidth).toInt(),
+                        (y * tileHeight).toInt()
+                    ),
+                    dstSize = IntSize(tileWidth.toInt(), tileHeight.toInt()),
+                    alpha = 0.4f
+                )
+            }
+        }
+    }
+
+}
+
 /**
  * The Game Header shows the user's current score and the time remaining for the game.
  * It also currently holds the arrowback button to return to the home screen.
@@ -363,38 +713,58 @@ fun PauseMenuDialog(
 fun GameHeader(
     score: Int,
     totalTimeRemaining: Float,
-    onMenuClick: () -> Unit
+    onMenuClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(80.dp)
-            .background(Color.DarkGray)
+            .background(Color.Transparent)
     ) {
         IconButton(
             onClick = onMenuClick,
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(8.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xFF6A1B9A)) // Purple color
+                .size(48.dp)
         ) {
             Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.White)
         }
-        Text(
-            text = "Score: ${score}",
+
+        Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(16.dp),
-            fontSize = 20.sp,
-            color = Color.White
-        )
-        Text(
-            text = "Time: ${totalTimeRemaining.toInt()}s",
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFF6A1B9A))
+                .padding(horizontal = 12.dp, vertical = 12.dp)
+        ) {
+            Text(
+                text = "Score: ${score}",
+                modifier = Modifier
+                    .align(Alignment.Center),
+                fontSize = 20.sp,
+                color = Color.White
+            )
+        }
+
+        Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .padding(16.dp),
-            fontSize = 20.sp,
-            color = Color.White
-        )
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFF6A1B9A))
+                .padding(horizontal = 12.dp, vertical = 12.dp)
+        ) {
+            Text(
+                text = "Time: ${totalTimeRemaining.toInt()}s",
+                modifier = Modifier
+                    .align(Alignment.CenterEnd),
+                fontSize = 20.sp,
+                color = Color.White
+            )
+        }
     }
 }
 
@@ -412,114 +782,57 @@ fun GameArea(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(Color.White)
     ) {
-        // Yellow Top Half - Twist It (clickable)
+        TiledLogoBackground(id = R.drawable.logo, tileDensity = 6)
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .fillMaxHeight(0.5f)
-                .background(Color.Yellow)
-                .pointerInput(gameState.isInActionGap, gameState.isInCountdown, gameState.isPaused, gameState.isInIntermission) {
-                    if (!gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            val (x, y) = dragAmount
-                            // Detect horizontal swipe (left or right)
-                            if (abs(x) > abs(y) && abs(x) > 50) {
-                                currentAction?.let {
-                                    onActionPerformed(GameAction.TWIST)
-                                }
-                            }
-                        }
-                    }
-                },
-            contentAlignment = Alignment.Center
         ) {
-            if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.TWIST) {
-                Text("Owh!", fontSize = 60.sp, color = Color.Green) // Success indicator
-            } else {
-                Text(
-                    text = currentAction?.takeIf { it == GameAction.TWIST }?.displayName ?: "Twist-it!",
-                    fontSize = 40.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-            }
+            TwistItRotation(
+                isEnabled = !gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission,
+                currentAction = currentAction,
+                gameState = gameState,
+                onActionPerformed = {
+                    currentAction?.let {
+                        onActionPerformed(GameAction.TWIST)
+                    }
+                }
+            )
         }
 
-        // Blue Bottom Half - Pull It (clickable)
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .fillMaxHeight(0.5f)
-                .background(Color.Blue)
-                .pointerInput(gameState.isInActionGap, gameState.isInCountdown, gameState.isPaused, gameState.isInIntermission) {
-                    if (!gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            val (x, y) = dragAmount
-                            // Detect downward swipe
-                            if (y > abs(x) && y > 50) {
-                                currentAction?.let {
-                                    onActionPerformed(GameAction.PULL)
-                                }
-                            }
-                        }
-                    }
-                },
-            contentAlignment = Alignment.Center
         ) {
-            if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.PULL) {
-                Text("Eeek!", fontSize = 60.sp, color = Color.Green)
-            } else {
-                Text(
-                    text = currentAction?.takeIf { it == GameAction.PULL }?.displayName ?: "Pull-it!",
-                    fontSize = 40.sp,
-                    color = Color.White
-                )
-            }
+            PullItSpring(
+                isEnabled = !gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission,
+                currentAction = currentAction,
+                gameState = gameState,
+                onActionPerformed = {
+                    currentAction?.let {
+                        onActionPerformed(GameAction.PULL)
+                    }
+                }
+            )
         }
 
-        // Red Circle - Whaap It (clickable, overlaps both areas)
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(300.dp)
-                .shadow(8.dp, CircleShape)
-                .background(Color.Red, CircleShape)
-                .clickable(enabled = !gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission) {
-                    currentAction?.let {
-                            onActionPerformed(GameAction.WHAAP)
-                    }
-                },
+                .size(300.dp), // Same size as the button
             contentAlignment = Alignment.Center
         ) {
-            if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.WHAAP) {
-                Text("Ouch!", fontSize = 80.sp, color = Color.Green)
-            } else {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = currentAction?.takeIf { it == GameAction.WHAAP }?.displayName ?: "Whaap-it!",
-                        color = Color.White,
-                        fontSize = 40.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    if (currentAction != null) {
-                        Text(
-                            text = "${gameState.actionTimeRemaining.toInt()}s",
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
+            WhaapItButton(
+                isEnabled = !gameState.isInActionGap && !gameState.isInCountdown && !gameState.isPaused && !gameState.isInIntermission,
+                currentAction = currentAction,
+                gameState = gameState,
+                onActionPerformed = {
+                    currentAction?.let {
+                        onActionPerformed(GameAction.WHAAP)
                     }
                 }
-            }
+            )
         }
 
         IntermissionOverlay(
@@ -699,22 +1012,23 @@ fun GameScreen(
         )
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        GameHeader(
-            score = gameState.score,
-            totalTimeRemaining = gameState.totalTimeRemaining,
-            onMenuClick = onMenuClick,
-        )
-
         GameArea(
             gameState = gameState,
             onActionPerformed = { action ->
                 handleAction(action, gameState) { newState -> gameState = newState }
             }
+        )
+
+        GameHeader(
+            score = gameState.score,
+            totalTimeRemaining = gameState.totalTimeRemaining,
+            onMenuClick = onMenuClick,
+            modifier = Modifier.align(Alignment.TopCenter)
         )
     }
 }
