@@ -334,9 +334,8 @@ fun StartScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "PLAY",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                text = "Play",
+                style = MaterialTheme.typography.labelLarge
             )
         }
 
@@ -360,9 +359,8 @@ fun StartScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "LEADERBOARD",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
+                text = "Leaderboard",
+                style = MaterialTheme.typography.labelLarge
             )
         }
 
@@ -386,9 +384,8 @@ fun StartScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "SETTINGS",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
+                text = "Settings",
+                style = MaterialTheme.typography.labelLarge
             )
         }
     }
