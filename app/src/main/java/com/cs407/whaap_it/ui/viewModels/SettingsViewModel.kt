@@ -1,10 +1,20 @@
 package com.cs407.whaap_it.ui.viewModels
 
+import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.cs407.whaap_it.data.SettingsDataStore
+import com.cs407.whaap_it.util.MusicManager
+import com.cs407.whaap_it.util.SoundManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 
 /**
  * Holds the toggle state of each game settings option
@@ -28,16 +38,49 @@ data class SettingsState(
 
 )
 
-class SettingsViewModel : ViewModel() {
-    private val _settingsState = mutableStateOf(SettingsState())
-    val settingsState: MutableState<SettingsState> = _settingsState
+class SettingsViewModel(
+    private val context: Context
+) : ViewModel() {
 
+    private val settingsDataStore = SettingsDataStore(context)
+    private val _settingsState = MutableStateFlow(SettingsState())
+    val settingsState: StateFlow<SettingsState> = _settingsState.asStateFlow()
+
+    init {
+        // Retrieve settings from DataStore, then update the settings state
+        viewModelScope.launch {
+            combine(
+                settingsDataStore.enableMusic,
+                settingsDataStore.musicVolume,
+                settingsDataStore.appVolume,
+                settingsDataStore.groovyMode,
+                settingsDataStore.useMicrophone,
+            ) { enableMusic, musicVolume, appVolume, groovyMode, useMicrophone ->
+
+                MusicManager.setMusicEnabled(enableMusic)
+                MusicManager.setMusicVolume(musicVolume)
+                SoundManager.setAppVolume(appVolume)
+
+                SettingsState(
+                    enableMusic = enableMusic,
+                    musicVolume = musicVolume,
+                    appVolume = appVolume,
+                    groovyMode = groovyMode,
+                    useMicrophone = useMicrophone
+                )
+            }.collect { newState ->
+                _settingsState.value = newState
+            }
+        }
+    }
     fun toggleFlip(enabled: Boolean) {
         _settingsState.value = _settingsState.value.copy(enableFlip = enabled)
     }
 
     fun toggleMic(enabled: Boolean) {
-        _settingsState.value = _settingsState.value.copy(useMicrophone = enabled)
+        viewModelScope.launch {
+            settingsDataStore.setUseMicrophone(enabled)
+        }
     }
 
     fun toggleHaptic(enabled: Boolean) {
@@ -65,18 +108,43 @@ class SettingsViewModel : ViewModel() {
     }
 
     fun toggleMusic(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsDataStore.setEnableMusic(enabled)
+        }
+
+        MusicManager.setMusicEnabled(enabled)
+
+        if (enabled) {
+            MusicManager.startMenuMusic(context)
+        } else {
+            MusicManager.pauseMenuMusic()
+        }
+
         _settingsState.value = _settingsState.value.copy(enableMusic = enabled)
     }
 
     fun toggleGroovy(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsDataStore.setGroovyMode(enabled)
+        }
         _settingsState.value = _settingsState.value.copy(groovyMode = enabled)
     }
 
     fun setMusicVolume(volume: Float) {
+        viewModelScope.launch {
+            settingsDataStore.setMusicVolume(volume)
+        }
+
+        MusicManager.setMusicVolume(volume)
         _settingsState.value = _settingsState.value.copy(musicVolume = volume)
     }
 
     fun setAppVolume(volume: Float) {
+        viewModelScope.launch {
+            settingsDataStore.setAppVolume(volume)
+        }
+
+        SoundManager.setAppVolume(volume)
         _settingsState.value = _settingsState.value.copy(appVolume = volume)
     }
 }

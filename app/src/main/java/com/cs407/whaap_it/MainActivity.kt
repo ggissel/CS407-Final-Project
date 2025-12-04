@@ -39,11 +39,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.cs407.whaap_it.auth.UserState
+import com.cs407.whaap_it.data.SettingsDataStore
+import com.cs407.whaap_it.data.settingsDataStore
 import com.cs407.whaap_it.ui.screen.LoginScreen
 import com.cs407.whaap_it.ui.screen.profile.ProfileScreen
 import com.cs407.whaap_it.ui.screen.SettingsScreen
@@ -53,6 +56,8 @@ import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.cs407.whaap_it.util.SoundManager
 import com.google.firebase.auth.FirebaseAuth
 import com.cs407.whaap_it.util.MusicManager
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -61,7 +66,23 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         SoundManager.init(this)  // Initializes SoundManager singleton object to handle component sounds
-        MusicManager.startMenuMusic(this) //start stolen_menu_music
+
+        lifecycleScope.launch {
+            // Get initial values from DataStore
+            val settingsDataStore = SettingsDataStore(this@MainActivity)
+            val enableMusic = settingsDataStore.enableMusic.firstOrNull() ?: true
+            val musicVolume = settingsDataStore.musicVolume.firstOrNull() ?: 0.5f
+            val appVolume = settingsDataStore.appVolume.firstOrNull() ?: 0.5f
+
+            MusicManager.setMusicEnabled(enableMusic)
+            MusicManager.setMusicVolume(musicVolume)
+            SoundManager.setAppVolume(appVolume)
+
+            // Start menu music if enabled
+            if (enableMusic) {
+                MusicManager.startMenuMusic(this@MainActivity)
+            }
+        }
 
         setContent {
             WhaapitTheme {
@@ -334,9 +355,8 @@ fun StartScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "PLAY",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                text = "Play",
+                style = MaterialTheme.typography.labelLarge
             )
         }
 
@@ -360,9 +380,8 @@ fun StartScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "LEADERBOARD",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
+                text = "Leaderboard",
+                style = MaterialTheme.typography.labelLarge
             )
         }
 
@@ -386,9 +405,8 @@ fun StartScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "SETTINGS",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
+                text = "Settings",
+                style = MaterialTheme.typography.labelLarge
             )
         }
     }

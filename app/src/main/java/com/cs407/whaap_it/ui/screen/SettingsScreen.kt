@@ -27,6 +27,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,6 +46,7 @@ import com.cs407.whaap_it.R
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.cs407.whaap_it.ui.viewModels.SettingsViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cs407.whaap_it.ui.viewModels.SettingsViewModelFactory
 import com.cs407.whaap_it.util.SoundManager
 
 /**
@@ -51,9 +54,12 @@ import com.cs407.whaap_it.util.SoundManager
  */
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = viewModel(),
     onNavigateToHome: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val viewModel: SettingsViewModel = viewModel(
+        factory = SettingsViewModelFactory(context)
+    )
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -86,7 +92,7 @@ fun SettingsScreen(
             ) {
                 Text(
                     text = stringResource(id = R.string.settings_page_title),
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineLarge,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
@@ -96,7 +102,7 @@ fun SettingsScreen(
         }
 
 
-        Cardfolio(viewModel)
+        Cardfolio(viewModel = viewModel)
     }
 
 }
@@ -117,9 +123,9 @@ fun SettingsScreenPreview() {
  */
 @Composable
 fun Cardfolio(
-    viewModel: SettingsViewModel = viewModel()
+    viewModel: SettingsViewModel
 ) {
-    var settings by viewModel.settingsState
+    val settings by viewModel.settingsState.collectAsState()
     val gameplaySettings = listOf(
         SettingItem.ToggleItem(
             title = "Shake Feature",
@@ -227,7 +233,9 @@ fun Cardfolio(
                             selected = index == selectedTabIndex,
                             onClick = { selectedTabIndex = index },
                             text = {
-                                Text(text = item.title)
+                                Text(
+                                    text = item.title,
+                                    style = MaterialTheme.typography.titleMedium)
                             }
                         )
                     }
