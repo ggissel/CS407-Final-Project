@@ -294,16 +294,18 @@ fun SimpleFloatingButton(
     if (isPrimary) {
         Button(
             onClick = onClick,
-            modifier = buttonModifier,
-            shape = RoundedCornerShape(12.dp)
+            modifier = buttonModifier
+                .wrapContentWidth(Alignment.CenterHorizontally),
+            shape = RoundedCornerShape(24.dp)
         ) {
             content()
         }
     } else {
         OutlinedButton(
             onClick = onClick,
-            modifier = buttonModifier,
-            shape = RoundedCornerShape(12.dp)
+            modifier = buttonModifier
+                .wrapContentWidth(Alignment.CenterHorizontally),
+            shape = RoundedCornerShape(24.dp)
         ) {
             content()
         }
