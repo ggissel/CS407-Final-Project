@@ -53,6 +53,7 @@ import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.cs407.whaap_it.util.SoundManager
 import com.google.firebase.auth.FirebaseAuth
 import com.cs407.whaap_it.util.MusicManager
+import android.Manifest
 
 
 class MainActivity : ComponentActivity() {
@@ -62,6 +63,13 @@ class MainActivity : ComponentActivity() {
 
         SoundManager.init(this)  // Initializes SoundManager singleton object to handle component sounds
         MusicManager.startMenuMusic(this) //start stolen_menu_music
+
+        // Request microphone permission at app start
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 200)
+            }
+        }
 
         setContent {
             WhaapitTheme {

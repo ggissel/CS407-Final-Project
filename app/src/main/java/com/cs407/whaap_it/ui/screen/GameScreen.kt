@@ -938,12 +938,6 @@ fun GameScreen(
         )
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasMicPermission = isGranted
-    }
-
     LaunchedEffect(Unit) {
         VoiceRecognitionManager.initialize(context)
     }
@@ -1002,11 +996,6 @@ fun GameScreen(
         }
     }
 
-    LaunchedEffect(gameState.currentAction) {
-        if (gameState.currentAction == GameAction.SHOUT && !hasMicPermission) {
-            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-        }
-    }
 
     DisposableEffect(Unit) {
         onDispose {
