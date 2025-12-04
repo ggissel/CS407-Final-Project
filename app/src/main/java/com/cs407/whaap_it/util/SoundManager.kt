@@ -72,7 +72,7 @@ object SoundManager {
 
         tooSlowSound = soundPool.load(context, R.raw.too_slow_game_over, 1)
 
-        zipperSquealSound = soundPool.load(context, R.raw.zipper_squeal, 1)
+        zipperSquealSound = soundPool.load(context, R.raw.bop_sound, 1)
 
         swipeSound = soundPool.load(context, R.raw.swipe, 1)
 
