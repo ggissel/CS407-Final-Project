@@ -342,7 +342,7 @@ fun PauseMenuDialog(
             ) {
                 Text(
                     text = "Game Paused",
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
@@ -354,7 +354,10 @@ fun PauseMenuDialog(
                         onClick = onResume,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Resume Game")
+                        Text(
+                            "Resume Game",
+                            style = MaterialTheme.typography.labelMedium
+                        )
                     }
 
                     Button(
@@ -367,7 +370,10 @@ fun PauseMenuDialog(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Exit to Menu")
+                        Text(
+                            "Exit to Menu",
+                            style = MaterialTheme.typography.labelMedium
+                        )
                     }
                 }
             }
@@ -976,8 +982,14 @@ fun GameScreen(
     if (!gameState.isGameActive) {
         AlertDialog(
             onDismissRequest = {/* Don't allow dismiss by clicking outside */},
-            title = { Text("Game Over!") },
-            text = { Text("Final Score: ${gameState.score}") },
+            title = { Text(
+                "Game Over",
+                style = MaterialTheme.typography.labelLarge
+            ) },
+            text = { Text(
+                "Final Score: ${gameState.score}",
+                style = MaterialTheme.typography.labelMedium
+            ) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -989,7 +1001,8 @@ fun GameScreen(
                         ) }
                     }
                 ) {
-                    Text("Play Again")
+                    Text("Play Again",
+                        style = MaterialTheme.typography.labelSmall)
                 }
             },
             dismissButton = {
@@ -999,7 +1012,8 @@ fun GameScreen(
                         onNavigateToHome()
                     }
                 ) {
-                    Text("Main Menu")
+                    Text("Main Menu",
+                        style = MaterialTheme.typography.labelSmall)
                 }
             }
         )

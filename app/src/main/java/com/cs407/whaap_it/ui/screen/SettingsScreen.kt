@@ -86,7 +86,7 @@ fun SettingsScreen(
             ) {
                 Text(
                     text = stringResource(id = R.string.settings_page_title),
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineLarge,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
@@ -227,7 +227,9 @@ fun Cardfolio(
                             selected = index == selectedTabIndex,
                             onClick = { selectedTabIndex = index },
                             text = {
-                                Text(text = item.title)
+                                Text(
+                                    text = item.title,
+                                    style = MaterialTheme.typography.titleMedium)
                             }
                         )
                     }

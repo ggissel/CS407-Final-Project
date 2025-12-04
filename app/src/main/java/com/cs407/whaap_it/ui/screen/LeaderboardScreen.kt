@@ -88,7 +88,7 @@ fun LeaderboardScreen(
             ) {
                 Text(
                     text = stringResource(id = R.string.leaderboard_page_title),
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineLarge,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
