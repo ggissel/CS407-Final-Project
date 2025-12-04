@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -42,6 +43,7 @@ import kotlin.random.Random
 import com.cs407.whaap_it.util.MusicManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.window.Dialog
@@ -356,7 +358,7 @@ fun PauseMenuDialog(
             ) {
                 Text(
                     text = "Game Paused",
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
@@ -368,7 +370,10 @@ fun PauseMenuDialog(
                         onClick = onResume,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Resume Game")
+                        Text(
+                            "Resume Game",
+                            style = MaterialTheme.typography.labelMedium
+                        )
                     }
 
                     Button(
@@ -381,7 +386,10 @@ fun PauseMenuDialog(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Exit to Menu")
+                        Text(
+                            "Exit to Menu",
+                            style = MaterialTheme.typography.labelMedium
+                        )
                     }
                 }
             }
@@ -450,11 +458,9 @@ fun WhaapItButton(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = currentAction?.takeIf { it == GameAction.WHAAP }?.displayName ?: "Whaap-it!",
-                    color = Color.White,
-                    fontSize = 40.sp,
-                    fontWeight = FontWeight.Bold
+                Image(
+                    painter = painterResource(id = R.drawable.whaap_it_text),
+                    contentDescription = "Whaap-it",
                 )
 
                 if (currentAction != null) {
@@ -1123,8 +1129,14 @@ fun GameScreen(
     if (!gameState.isGameActive) {
         AlertDialog(
             onDismissRequest = {/* Don't allow dismiss by clicking outside */},
-            title = { Text("Game Over!") },
-            text = { Text("Final Score: ${gameState.score}") },
+            title = { Text(
+                "Game Over",
+                style = MaterialTheme.typography.labelLarge
+            ) },
+            text = { Text(
+                "Final Score: ${gameState.score}",
+                style = MaterialTheme.typography.labelMedium
+            ) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -1136,7 +1148,8 @@ fun GameScreen(
                         ) }
                     }
                 ) {
-                    Text("Play Again")
+                    Text("Play Again",
+                        style = MaterialTheme.typography.labelSmall)
                 }
             },
             dismissButton = {
@@ -1146,7 +1159,8 @@ fun GameScreen(
                         onNavigateToHome()
                     }
                 ) {
-                    Text("Main Menu")
+                    Text("Main Menu",
+                        style = MaterialTheme.typography.labelSmall)
                 }
             }
         )

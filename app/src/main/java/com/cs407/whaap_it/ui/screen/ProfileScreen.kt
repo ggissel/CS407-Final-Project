@@ -164,7 +164,7 @@ private fun ProfileTopBar(onNavigateBack: () -> Unit) {
         ) {
             Text(
                 text = "Profile",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineLarge,
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )

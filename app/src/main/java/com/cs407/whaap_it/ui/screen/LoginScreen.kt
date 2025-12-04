@@ -209,7 +209,7 @@ private fun LoginTopBar(onNavigateBack: () -> Unit) {
         ) {
             Text(
                 text = "Login/Sign Up",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineLarge,
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )
