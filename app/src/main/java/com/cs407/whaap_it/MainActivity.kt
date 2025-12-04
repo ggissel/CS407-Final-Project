@@ -56,6 +56,7 @@ import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.cs407.whaap_it.util.SoundManager
 import com.google.firebase.auth.FirebaseAuth
 import com.cs407.whaap_it.util.MusicManager
+import android.Manifest
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
@@ -81,6 +82,13 @@ class MainActivity : ComponentActivity() {
             // Start menu music if enabled
             if (enableMusic) {
                 MusicManager.startMenuMusic(this@MainActivity)
+            }
+        }
+
+        // Request microphone permission at app start
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 200)
             }
         }
 

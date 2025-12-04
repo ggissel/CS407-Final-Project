@@ -1,6 +1,5 @@
 package com.cs407.whaap_it.ui.screen
 
-import android.graphics.Canvas
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
@@ -49,8 +47,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.window.Dialog
-import com.cs407.whaap_it.ui.screen.TiledLogoBackground
 import com.cs407.whaap_it.R
+import android.Manifest
+import android.content.pm.PackageManager
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import com.cs407.whaap_it.util.VoiceRecognitionManager
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.runtime.Composable
+import android.widget.Toast
 
 // How many actions performed before the next difficulty level
 private const val ACTIONS_BEFORE_FAST = 10
@@ -109,10 +116,12 @@ data class GameState(
 /**
  * Enum class that stores all the possible game actions and their points value
  */
-enum class GameAction(val displayName: String, val points: Int, val playSound: () -> Unit, val playActionSound: () -> Unit) {
+enum class GameAction(val displayName: String, val points: Int, val playSound: () -> Unit, val playActionSound: () -> Unit, val customActionTime: Float? = null) {
     WHAAP("Whaap-it!", 10, {SoundManager.playBopIt()}, {SoundManager.zipperSquealSound()}),
     PULL("Pull-it!", 10, {SoundManager.playPullIt()}, {SoundManager.swipeSound()}),
     TWIST("Twist-it!", 10, {SoundManager.playTwistIt()}, {SoundManager.cartoonJumpSound()}),
+
+    SHOUT("Shout-it!", 10, {SoundManager.playButtonClick()}, {SoundManager.playButtonClick()}, customActionTime = 5f)
     // Add more Game Actions in the future...
 }
 
@@ -120,9 +129,10 @@ enum class GameAction(val displayName: String, val points: Int, val playSound: (
  * Random action generator. Returns a random Game Action.
  */
 private fun generateRandomAction(): GameAction {
-    return when (Random.nextInt(3)) {
+    return when (Random.nextInt(4)) {
         0 -> GameAction.WHAAP
         1 -> GameAction.PULL
+        2 -> GameAction.SHOUT
         else -> GameAction.TWIST
     }
 }
@@ -141,12 +151,14 @@ private fun startGame(onStateUpdate: (GameState) -> Unit) {
     val actions = generateInitialActions()
     val firstAction = actions.firstOrNull()
 
+    val initialTime = firstAction?.customActionTime ?: 3f
+
     onStateUpdate(
         GameState(
             isGameActive = true,
             actions = actions,
             currentAction = firstAction,
-            actionTimeRemaining = 3f,
+            actionTimeRemaining = initialTime,
             totalTimeRemaining = 60f,
             countdown = 3,
             isInCountdown = true
@@ -191,12 +203,14 @@ private fun nextAction(currentState: GameState, onStateUpdate: (GameState) -> Un
         } else {
             nextAction.playSound()
 
+            val actionTime = nextAction.customActionTime ?: nextDifficulty.actionTime
+
             onStateUpdate(
                 currentState.copy(
                     currentAction = nextAction,
                     currentActionIndex = nextIndex,
                     actions = nextActions,
-                    actionTimeRemaining = nextDifficulty.actionTime,
+                    actionTimeRemaining = actionTime,
                     isInActionGap = false,
                     gapTimeRemaining = 0f,
                     currentDifficulty = nextDifficulty
@@ -676,6 +690,7 @@ fun RotationIndicators(rotation: Float) {
     }
 }
 
+
 @Composable
 fun TiledLogoBackground(
     id: Int,
@@ -781,7 +796,9 @@ fun GameHeader(
 @Composable
 fun GameArea(
     gameState: GameState,
-    onActionPerformed: (GameAction) -> Unit
+    onActionPerformed: (GameAction) -> Unit,
+    hasMicPermission: Boolean = true,
+    debugMessage: String = ""
 ) {
     val currentAction = gameState.currentAction
 
@@ -841,6 +858,60 @@ fun GameArea(
             )
         }
 
+        if (currentAction == GameAction.SHOUT &&
+            !gameState.isInActionGap &&
+            !gameState.isInCountdown &&
+            !gameState.isPaused &&
+            !gameState.isInIntermission) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Green.copy(alpha = 0.3f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = "Listening",
+                        modifier = Modifier.size(100.dp),
+                        tint = Color.White
+                    )
+                    Text(
+                        text = if (hasMicPermission) "MAKE A SOUND!" else "Enable Microphone",
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    if (hasMicPermission) {
+                        Text(
+                            text = "Shout, yell, clap, or talk!",
+                            fontSize = 20.sp,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    }
+                }
+            }
+        }
+
+        if (gameState.isInActionGap && gameState.lastPerformedAction == GameAction.SHOUT) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Green.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Nice!",
+                    fontSize = 60.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
         IntermissionOverlay(
             timeRemaining = gameState.intermissionCountdown,
             nextDifficulty = getDifficultyForAction(gameState.currentActionIndex + 1),
@@ -862,8 +933,84 @@ fun GameScreen(
     val context = LocalContext.current
     var gameState by remember { mutableStateOf(GameState()) }
     var showPauseMenu by remember { mutableStateOf(false) }
+    var debugMessage by remember { mutableStateOf("") }
+
+    var hasMicPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        VoiceRecognitionManager.initialize(context)
+    }
+
+    LaunchedEffect(
+        gameState.currentAction,
+        gameState.isGameActive,
+        gameState.isPaused,
+        gameState.isInCountdown,
+        gameState.isInActionGap,
+        hasMicPermission,
+        gameState.currentActionIndex
+    ) {
+        val shouldListen = gameState.isGameActive &&
+                !gameState.isPaused &&
+                !gameState.isInCountdown &&
+                !gameState.isInActionGap &&
+                gameState.currentAction == GameAction.SHOUT &&
+                hasMicPermission
+
+        Log.d("GameScreen", "Voice LaunchedEffect - shouldListen: $shouldListen, currentAction: ${gameState.currentAction}, isListening: ${VoiceRecognitionManager.isCurrentlyListening()}")
+
+        if (shouldListen) {
+            if (VoiceRecognitionManager.isCurrentlyListening()) {
+                Log.d("GameScreen", "Stopping previous listener before restarting")
+                VoiceRecognitionManager.stopListening()
+                delay(100)
+            }
+
+            Log.d("GameScreen", "Starting new sound detection session")
+            Toast.makeText(context, "Listening for sound...", Toast.LENGTH_SHORT).show()
+
+            VoiceRecognitionManager.startListening(
+                context = context,
+                onResult = { spokenText ->
+                    Log.d("GameScreen", "Sound detected: '$spokenText'")
+                    debugMessage = "Sound detected!"
+
+                    // Accept ANY sound - check that we're still in SHOUT action
+                    if (spokenText.isNotBlank() && gameState.currentAction == GameAction.SHOUT) {
+                        Toast.makeText(context, "Sound detected!", Toast.LENGTH_SHORT).show()
+                        handleAction(GameAction.SHOUT, gameState) { newState ->
+                            gameState = newState
+                        }
+                    }
+                },
+                onError = {
+                    Log.e("GameScreen", "Sound detection error")
+                    debugMessage = "Listening..."
+                }
+            )
+        } else if (!shouldListen && VoiceRecognitionManager.isCurrentlyListening()) {
+            Log.d("GameScreen", "Stopping listener - conditions no longer met")
+            VoiceRecognitionManager.stopListening()
+            debugMessage = ""
+        }
+    }
+
+
+    DisposableEffect(Unit) {
+        onDispose {
+            VoiceRecognitionManager.destroy()
+        }
+    }
 
     LaunchedEffect(gameState.isInCountdown, gameState.isPaused) {
+
         if (gameState.isInCountdown && !gameState.isPaused) {
             for (i in gameState.countdown downTo 1) {
                 delay(1000L)
@@ -1035,7 +1182,9 @@ fun GameScreen(
             gameState = gameState,
             onActionPerformed = { action ->
                 handleAction(action, gameState) { newState -> gameState = newState }
-            }
+            },
+            hasMicPermission = hasMicPermission,
+            debugMessage = debugMessage
         )
 
         GameHeader(
