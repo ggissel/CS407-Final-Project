@@ -20,6 +20,7 @@ import com.cs407.whaap_it.util.SoundManager
 import com.google.firebase.auth.FirebaseAuth
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.clip
 
 @Composable
 fun ProfileScreen(
@@ -144,13 +145,14 @@ private fun ProfileTopBar(onNavigateBack: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = MaterialTheme.colorScheme.primary)
             .padding(vertical = 16.dp)
     ) {
         IconButton(onClick = {
             SoundManager.playButtonClick()
             onNavigateBack()
-        }) {
+        },
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary)) {
             Icon(
                 Icons.Default.ArrowBack,
                 contentDescription = "Back",
@@ -159,7 +161,12 @@ private fun ProfileTopBar(onNavigateBack: () -> Unit) {
         }
 
         Box(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .wrapContentWidth(Alignment.CenterHorizontally)
+                .clip(RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.primary)
+                .padding(8.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
