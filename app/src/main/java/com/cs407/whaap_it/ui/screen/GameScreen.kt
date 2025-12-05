@@ -121,7 +121,9 @@ enum class GameAction(val displayName: String, val points: Int, val playSound: (
     PULL("Pull-it!", 10, {SoundManager.playPullIt()}, {SoundManager.swipeSound()}),
     TWIST("Twist-it!", 10, {SoundManager.playTwistIt()}, {SoundManager.cartoonJumpSound()}),
 
-    SHOUT("Shout-it!", 10, {SoundManager.playButtonClick()}, {SoundManager.playButtonClick()}, customActionTime = 5f)
+    SHOUT("Shout-it!", 10, {SoundManager.playShoutIt()}, {SoundManager.playButtonClick()}, customActionTime = 5f)
+
+    //SHAKE("Shake-it!", points=10, {SoundManager.playShakeIt()}, {SoundManager.playButtonClick()})
     // Add more Game Actions in the future...
 }
 
