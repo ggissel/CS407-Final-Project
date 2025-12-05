@@ -44,6 +44,10 @@ object SoundManager {
 
     private var failTrumpetSound: Int = 0
 
+    private var shoutItSound: Int = 0
+
+    private var shakeItSound: Int = 0
+
     fun init(context: Context) {
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_GAME)
@@ -79,6 +83,11 @@ object SoundManager {
         cartoonJumpSound = soundPool.load(context, R.raw.cartoon_jump, 1)
 
         failTrumpetSound = soundPool.load(context, R.raw.fail_trumpet, 1)
+
+        shoutItSound = soundPool.load(context, R.raw.shout_it, 1)
+
+        shakeItSound = soundPool.load(context, R.raw.shake_it, 1)
+
 
         // Load saved volume settings
         val settingsDataStore = SettingsDataStore(context)
@@ -151,6 +160,13 @@ object SoundManager {
         soundPool.play(failTrumpetSound, appVolume, appVolume, 1, 0, 1f)
     }
 
+    fun playShoutIt(){
+        soundPool.play(shoutItSound, appVolume, appVolume, 1, 0, 1f)
+    }
+
+    fun playShakeIt(){
+        soundPool.play(shakeItSound, appVolume, appVolume, 1, 0, 1f)
+    }
     fun release() {
         soundPool.release()
     }
