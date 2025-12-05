@@ -58,6 +58,7 @@ import com.cs407.whaap_it.util.VoiceRecognitionManager
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.runtime.Composable
 import android.widget.Toast
+import com.cs407.whaap_it.util.ShakeDetector
 
 // How many actions performed before the next difficulty level
 private const val ACTIONS_BEFORE_FAST = 10
@@ -121,9 +122,9 @@ enum class GameAction(val displayName: String, val points: Int, val playSound: (
     PULL("Pull-it!", 10, {SoundManager.playPullIt()}, {SoundManager.swipeSound()}),
     TWIST("Twist-it!", 10, {SoundManager.playTwistIt()}, {SoundManager.cartoonJumpSound()}),
 
-    SHOUT("Shout-it!", 10, {SoundManager.playShoutIt()}, {SoundManager.playButtonClick()}, customActionTime = 5f)
+    SHOUT("Shout-it!", 10, {SoundManager.playShoutIt()}, {SoundManager.playButtonClick()}, customActionTime = 5f),
 
-    //SHAKE("Shake-it!", points=10, {SoundManager.playShakeIt()}, {SoundManager.playButtonClick()})
+    SHAKE("Shake-it!", points=10, {SoundManager.playShakeIt()}, {SoundManager.playButtonClick()})
     // Add more Game Actions in the future...
 }
 
@@ -131,10 +132,11 @@ enum class GameAction(val displayName: String, val points: Int, val playSound: (
  * Random action generator. Returns a random Game Action.
  */
 private fun generateRandomAction(): GameAction {
-    return when (Random.nextInt(4)) {
+    return when (Random.nextInt(5)) {
         0 -> GameAction.WHAAP
         1 -> GameAction.PULL
         2 -> GameAction.SHOUT
+        3 -> GameAction.SHAKE
         else -> GameAction.TWIST
     }
 }
@@ -949,6 +951,27 @@ fun GameScreen(
     LaunchedEffect(Unit) {
         VoiceRecognitionManager.initialize(context)
     }
+
+    LaunchedEffect(gameState.currentAction, gameState.isGameActive, gameState.isPaused) {
+        if (
+            gameState.isGameActive &&
+            !gameState.isPaused &&
+            !gameState.isInCountdown &&
+            !gameState.isInActionGap &&
+            !gameState.isInIntermission &&
+            gameState.currentAction == GameAction.SHAKE
+        ) {
+            ShakeDetector.startListening(context) {
+                // Trigger only if still in SHAKE action
+                if (gameState.currentAction == GameAction.SHAKE) {
+                    handleAction(GameAction.SHAKE, gameState) { newState -> gameState = newState }
+                }
+            }
+        } else {
+            ShakeDetector.stopListening()
+        }
+    }
+
 
     LaunchedEffect(
         gameState.currentAction,
