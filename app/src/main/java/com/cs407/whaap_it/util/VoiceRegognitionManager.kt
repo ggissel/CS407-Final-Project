@@ -19,7 +19,7 @@ object VoiceRecognitionManager {
     private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
 
 
-    private const val AMPLITUDE_THRESHOLD = 2000
+    private const val AMPLITUDE_THRESHOLD = 4750
 
     private var hasTriggered = false
 
