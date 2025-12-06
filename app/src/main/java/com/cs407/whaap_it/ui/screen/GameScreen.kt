@@ -130,27 +130,36 @@ enum class GameAction(val displayName: String, val points: Int, val playSound: (
 /**
  * Random action generator. Returns a random Game Action.
  */
-private fun generateRandomAction(): GameAction {
-    return when (Random.nextInt(4)) {
-        0 -> GameAction.WHAAP
-        1 -> GameAction.PULL
-        2 -> GameAction.SHOUT
-        else -> GameAction.TWIST
+private fun generateRandomAction(allowShout: Boolean = true): GameAction {
+    return if (allowShout) {
+        when (Random.nextInt(4)) {
+            0 -> GameAction.WHAAP
+            1 -> GameAction.PULL
+            2 -> GameAction.SHOUT
+            else -> GameAction.TWIST
+        }
+    } else {
+        // Only generate WHAAP, PULL, or TWIST when microphone is disabled
+        when (Random.nextInt(3)) {
+            0 -> GameAction.WHAAP
+            1 -> GameAction.PULL
+            else -> GameAction.TWIST
+        }
     }
 }
 
 /**
  * Generates first 10 Game Actions of a game session
  */
-private fun generateInitialActions(): List<GameAction> {
-    return List(10) { generateRandomAction() } // Start with 10 actions
+private fun generateInitialActions(allowShout: Boolean = true): List<GameAction> {
+    return List(10) { generateRandomAction(allowShout) }
 }
 
 /**
  * Used to initiate the start of a game. Initializes the game state.
  */
-private fun startGame(onStateUpdate: (GameState) -> Unit) {
-    val actions = generateInitialActions()
+private fun startGame(allowShout: Boolean, onStateUpdate: (GameState) -> Unit) {
+    val actions = generateInitialActions(allowShout)
     val firstAction = actions.firstOrNull()
 
     val initialTime = firstAction?.customActionTime ?: 3f
@@ -174,7 +183,7 @@ private fun startGame(onStateUpdate: (GameState) -> Unit) {
  * Gets the next game action from the generated list of actions. If there are no more actions left,
  * this function ends the game
  */
-private fun nextAction(currentState: GameState, onStateUpdate: (GameState) -> Unit) {
+private fun nextAction(currentState: GameState, allowShout: Boolean, onStateUpdate: (GameState) -> Unit) {
     if (currentState.totalTimeRemaining <= 0) {
         onStateUpdate(currentState.copy(isGameActive = false, currentAction = null))
         return
@@ -185,7 +194,7 @@ private fun nextAction(currentState: GameState, onStateUpdate: (GameState) -> Un
     var nextAction = nextActions.getOrNull(nextIndex)
 
     if (nextIndex >= nextActions.size) {
-        val newActions = List(5) { generateRandomAction() }
+        val newActions = List(5) { generateRandomAction(allowShout) }
         nextActions = nextActions + newActions
         nextAction = nextActions.getOrNull(nextIndex)
     }
@@ -946,6 +955,9 @@ fun GameScreen(
         )
     }
 
+    val settingsDataStore = remember { com.cs407.whaap_it.data.SettingsDataStore(context) }
+    val useMicrophone by settingsDataStore.useMicrophone.collectAsState(initial = true)
+
     LaunchedEffect(Unit) {
         VoiceRecognitionManager.initialize(context)
     }
@@ -975,8 +987,6 @@ fun GameScreen(
                 delay(100)
             }
 
-            Log.d("GameScreen", "Starting new sound detection session")
-            Toast.makeText(context, "Listening for sound...", Toast.LENGTH_SHORT).show()
 
             VoiceRecognitionManager.startListening(
                 context = context,
@@ -986,7 +996,6 @@ fun GameScreen(
 
                     // Accept any sound, check that we're still in SHOUT action
                     if (spokenText.isNotBlank() && gameState.currentAction == GameAction.SHOUT) {
-                        Toast.makeText(context, "Sound detected!", Toast.LENGTH_SHORT).show()
                         handleAction(GameAction.SHOUT, gameState) { newState ->
                             gameState = newState
                         }
@@ -1044,7 +1053,7 @@ fun GameScreen(
             if (gameState.isInIntermission && !gameState.isPaused) {
                 gameState = gameState.copy(isInIntermission = false)
                 SoundManager.playButtonClick()
-                nextAction(gameState) { newState -> gameState = newState }
+                nextAction(gameState, useMicrophone) { newState -> gameState = newState }
             }
         }
     }
@@ -1064,7 +1073,7 @@ fun GameScreen(
 
                     if (newGapTime <= 0) {
                         gameState = gameState.copy(isInActionGap = false)
-                        nextAction(gameState) { newState -> gameState = newState }
+                        nextAction(gameState, useMicrophone) { newState -> gameState = newState }
                     }
                 } else {
                     gameState = gameState.copy(
@@ -1089,7 +1098,7 @@ fun GameScreen(
 
     LaunchedEffect(Unit) {
         if (!gameState.isGameActive && gameState.currentAction == null) {
-            startGame { newState -> gameState = newState.copy(
+            startGame(useMicrophone) { newState -> gameState = newState.copy(
                 countdown = 3,
                 isInCountdown = true,
                 isPaused = false
@@ -1143,7 +1152,7 @@ fun GameScreen(
                 Button(
                     onClick = {
                         MusicManager.startGameplayMusic(context)
-                        startGame { newState -> gameState = newState.copy(
+                        startGame(useMicrophone) { newState -> gameState = newState.copy(
                             countdown = 3,
                             isInCountdown = true,
                             isPaused = false
