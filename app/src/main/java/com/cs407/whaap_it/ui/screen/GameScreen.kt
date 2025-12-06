@@ -160,7 +160,12 @@ private fun generateInitialActions(allowShout: Boolean = true): List<GameAction>
  */
 private fun startGame(allowShout: Boolean, onStateUpdate: (GameState) -> Unit) {
     val actions = generateInitialActions(allowShout)
-    val firstAction = actions.firstOrNull()
+    // Find the first non-SHOUT action if microphone is disabled
+    val firstAction = if (allowShout) {
+        actions.firstOrNull()
+    } else {
+        actions.firstOrNull { it != GameAction.SHOUT }
+    }
 
     val initialTime = firstAction?.customActionTime ?: 3f
 
@@ -197,6 +202,27 @@ private fun nextAction(currentState: GameState, allowShout: Boolean, onStateUpda
         val newActions = List(5) { generateRandomAction(allowShout) }
         nextActions = nextActions + newActions
         nextAction = nextActions.getOrNull(nextIndex)
+    }
+
+    // SKIP SHOUT actions if microphone is disabled
+    if (nextAction == GameAction.SHOUT && !allowShout) {
+        Log.d("GameScreen", "Skipping SHOUT action - microphone disabled")
+        // Move to the next action instead by calling nextAction recursively
+        onStateUpdate(
+            currentState.copy(
+                currentActionIndex = nextIndex,
+                actions = nextActions
+            )
+        )
+        nextAction(
+            currentState.copy(
+                currentActionIndex = nextIndex,
+                actions = nextActions
+            ),
+            allowShout,
+            onStateUpdate
+        )
+        return
     }
 
     if (nextAction != null) {
@@ -955,6 +981,12 @@ fun GameScreen(
         )
     }
 
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasMicPermission = isGranted
+    }
+
     val settingsDataStore = remember { com.cs407.whaap_it.data.SettingsDataStore(context) }
     val useMicrophone by settingsDataStore.useMicrophone.collectAsState(initial = true)
 
@@ -976,7 +1008,8 @@ fun GameScreen(
                 !gameState.isInCountdown &&
                 !gameState.isInActionGap &&
                 gameState.currentAction == GameAction.SHOUT &&
-                hasMicPermission
+                hasMicPermission &&
+                useMicrophone
 
         Log.d("GameScreen", "Voice LaunchedEffect - shouldListen: $shouldListen, currentAction: ${gameState.currentAction}, isListening: ${VoiceRecognitionManager.isCurrentlyListening()}")
 
@@ -1013,6 +1046,11 @@ fun GameScreen(
         }
     }
 
+    LaunchedEffect(gameState.currentAction, useMicrophone) {
+        if (gameState.currentAction == GameAction.SHOUT && useMicrophone && !hasMicPermission) {
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -1096,8 +1134,10 @@ fun GameScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(useMicrophone) {
+        // Wait for useMicrophone to load, then start game
         if (!gameState.isGameActive && gameState.currentAction == null) {
+            Log.d("GameScreen", "Starting game with useMicrophone: $useMicrophone")
             startGame(useMicrophone) { newState -> gameState = newState.copy(
                 countdown = 3,
                 isInCountdown = true,
