@@ -1135,9 +1135,7 @@ fun GameScreen(
     }
 
     LaunchedEffect(useMicrophone) {
-        // Wait for useMicrophone to load, then start game
         if (!gameState.isGameActive && gameState.currentAction == null) {
-            Log.d("GameScreen", "Starting game with useMicrophone: $useMicrophone")
             startGame(useMicrophone) { newState -> gameState = newState.copy(
                 countdown = 3,
                 isInCountdown = true,
