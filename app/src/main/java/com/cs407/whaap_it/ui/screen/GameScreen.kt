@@ -121,7 +121,7 @@ enum class GameAction(val displayName: String, val points: Int, val playSound: (
     PULL("Pull-it!", 10, {SoundManager.playPullIt()}, {SoundManager.swipeSound()}),
     TWIST("Twist-it!", 10, {SoundManager.playTwistIt()}, {SoundManager.cartoonJumpSound()}),
 
-    SHOUT("Shout-it!", 10, {SoundManager.playShoutIt()}, {SoundManager.playButtonClick()}, customActionTime = 5f)
+    SHOUT("Shout-it!", 10, {SoundManager.playShoutIt()}, {}, customActionTime = 5f)
 
     //SHAKE("Shake-it!", points=10, {SoundManager.playShakeIt()}, {SoundManager.playButtonClick()})
     // Add more Game Actions in the future...
@@ -254,7 +254,7 @@ private fun handleAction(
                 lastPerformedAction = performedAction
             )
         )
-        SoundManager.playButtonClick()
+            SoundManager.playButtonClick()
 
     } else {
         if (currentState.isGameActive) {
@@ -984,7 +984,7 @@ fun GameScreen(
                     Log.d("GameScreen", "Sound detected: '$spokenText'")
                     debugMessage = "Sound detected!"
 
-                    // Accept ANY sound - check that we're still in SHOUT action
+                    // Accept any sound, check that we're still in SHOUT action
                     if (spokenText.isNotBlank() && gameState.currentAction == GameAction.SHOUT) {
                         Toast.makeText(context, "Sound detected!", Toast.LENGTH_SHORT).show()
                         handleAction(GameAction.SHOUT, gameState) { newState ->
