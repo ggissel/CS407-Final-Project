@@ -1,69 +1,78 @@
 package com.cs407.whaap_it.ui.viewModels
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-
-data class LeaderboardState(
-    val leaderboard: List<Pair<String, Int>> = emptyList()
-)
+import androidx.lifecycle.viewModelScope
+import com.cs407.whaap_it.data.LeaderboardEntry
+import com.cs407.whaap_it.data.LeaderboardRepository
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class LeaderboardViewModel : ViewModel() {
-    private val _leaderboardState = mutableStateOf(LeaderboardState())
-    val leaderboardState: MutableState<LeaderboardState> = _leaderboardState
 
-    fun updateLeaderboard(newLeaderboard: List<Pair<String, Int>>) {
-        _leaderboardState.value = LeaderboardState(
-            leaderboard = newLeaderboard.sortedByDescending { it.second }
+    private val _leaderboardState = MutableStateFlow(LeaderboardState())
+    val leaderboardState: StateFlow<LeaderboardState> = _leaderboardState.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val auth = FirebaseAuth.getInstance()
+
+    init {
+        loadLeaderboard()
+    }
+
+    fun loadLeaderboard() {
+        _isLoading.value = true
+        viewModelScope.launch {
+            try {
+                val entries = LeaderboardRepository.getTopScores(50)
+                _leaderboardState.value = LeaderboardState(
+                    entries = entries,
+                    error = null
+                )
+            } catch (e: Exception) {
+                _leaderboardState.value = LeaderboardState(
+                    entries = emptyList(),
+                    error = "Failed to load leaderboard: ${e.message}"
+                )
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun submitScore(score: Int) {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            // Guest mode, not needed,
+            return
+        }
+
+        val entry = LeaderboardEntry(
+            userId = currentUser.uid,
+            displayName = currentUser.displayName ?: "Anonymous",
+            score = score,
+            email = currentUser.email ?: ""
         )
-    }
 
-    fun addScore(name: String, score: Int) {
-        val currentList = _leaderboardState.value.leaderboard.toMutableList()
-
-        // Check if player exists
-        val existingIndex = currentList.indexOfFirst { it.first == name }
-
-        if (existingIndex != -1) {
-            // If existing, update score
-            currentList[existingIndex] = name to score
-        } else {
-            // Else add new player
-            currentList.add(name to score)
-        }
-
-        // Update leaderboard
-        updateLeaderboard(currentList)
-    }
-
-    fun removeScore(name: String) {
-        val updatedList = _leaderboardState.value.leaderboard.filterNot { it.first == name }
-        // Update leaderboard
-        updateLeaderboard(updatedList)
-    }
-
-    fun clearLeaderboard() {
-        updateLeaderboard(emptyList())
-    }
-
-    fun getLeaderboard(): List<Pair<String, Int>> {
-        return _leaderboardState.value.leaderboard
-    }
-
-    fun getScore(name: String): Int {
-        return _leaderboardState.value.leaderboard.find { it.first == name }?.second ?: 0
-    }
-
-    fun getRank(name: String): Int {
-        val sorted = _leaderboardState.value.leaderboard
-        return sorted.indexOfFirst { it.first == name }.let { index ->
-            if (index != -1) index + 1 else 0
+        viewModelScope.launch {
+            val success = LeaderboardRepository.submitScore(entry)
+            if (success) {
+                // Refresh leaderboard after successful submission
+                loadLeaderboard()
+            }
         }
     }
 
-    fun getTopScores(limit: Int = 3): List<Pair<String, Int>> {
-        return _leaderboardState.value.leaderboard.take(limit)
+    fun refresh() {
+        loadLeaderboard()
     }
+
+    data class LeaderboardState(
+        val entries: List<LeaderboardEntry> = emptyList(),
+        val error: String? = null
+    )
 }

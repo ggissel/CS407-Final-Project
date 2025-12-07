@@ -59,6 +59,8 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.runtime.Composable
 import android.widget.Toast
 import com.cs407.whaap_it.util.ShakeDetector
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cs407.whaap_it.ui.viewModels.LeaderboardViewModel
 
 // How many actions performed before the next difficulty level
 private const val ACTIONS_BEFORE_FAST = 10
@@ -968,7 +970,8 @@ fun GameArea(
 @Composable
 fun GameScreen(
     navController: NavController? = null,
-    onNavigateToHome: () -> Unit = {}
+    onNavigateToHome: () -> Unit = {},
+    leaderboardViewModel: LeaderboardViewModel = viewModel()
 ) {
     val context = LocalContext.current
     var gameState by remember { mutableStateOf(GameState()) }
@@ -1200,6 +1203,12 @@ fun GameScreen(
     }
 
     if (!gameState.isGameActive) {
+        if (gameState.score > 0) {
+            LaunchedEffect(gameState.score) {
+                leaderboardViewModel.submitScore(gameState.score)
+            }
+        }
+
         AlertDialog(
             onDismissRequest = {/* Don't allow dismiss by clicking outside */},
             title = { Text(

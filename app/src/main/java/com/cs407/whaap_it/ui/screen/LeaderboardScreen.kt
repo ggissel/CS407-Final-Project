@@ -16,7 +16,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,6 +26,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +45,7 @@ import com.cs407.whaap_it.R
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.cs407.whaap_it.ui.viewModels.LeaderboardViewModel
 import com.cs407.whaap_it.util.SoundManager
+import com.cs407.whaap_it.data.LeaderboardEntry
 
 /**
  * Leaderboard main entry
@@ -59,6 +63,10 @@ fun LeaderboardScreen(
     viewModel: LeaderboardViewModel = viewModel(),
     onNavigateToHome: () -> Unit = {}
 ) {
+
+    val leaderboardState by viewModel.leaderboardState.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -102,10 +110,45 @@ fun LeaderboardScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.size(48.dp))  // same width as IconButton for symmetry
+            //Spacer(modifier = Modifier.size(48.dp))  // same width as IconButton for symmetry
+
+            // Refresh button
+            IconButton(
+                onClick = {
+                    SoundManager.playButtonClick()
+                    viewModel.refresh()
+                },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = "Refresh",
+                    tint = Color.White
+                )
+            }
         }
 
-        LeaderboardCard(viewModel)
+        // Loading indicator or content
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            leaderboardState.error?.let { error ->
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
+            LeaderboardCard(entries = leaderboardState.entries)
+        }
     }
 }
 
@@ -125,39 +168,8 @@ fun LeaderboardScreenPreview() {
  */
 @Composable
 fun LeaderboardCard(
-    viewModel: LeaderboardViewModel = viewModel()
+    entries: List<LeaderboardEntry>
 ) {
-
-    val leaderboardState by viewModel.leaderboardState
-
-    // For adding tabs (maybe)
-    // val tabItems = listOf("Local","Global")
-    // var selectedTabIndex by remember { mutableIntStateOf(0) }
-
-    viewModel.addScore("person1", 70)
-    viewModel.addScore("person2", 65)
-    viewModel.addScore("person3", 60)
-    viewModel.addScore("person4", 55)
-    viewModel.addScore("person5", 50)
-    viewModel.addScore("person6", 45)
-    viewModel.addScore("person7", 40)
-    viewModel.addScore("person8", 35)
-    viewModel.addScore("person9", 30)
-    viewModel.addScore("person10", 30)
-    viewModel.addScore("person11", 25)
-    viewModel.addScore("person12", 20)
-    viewModel.addScore("person13", 15)
-    viewModel.addScore("person14", 10)
-    viewModel.addScore("person15", 5)
-
-    val currentList = leaderboardState.leaderboard
-        .mapIndexed { index, pair ->
-            LeaderboardEntry(
-                rank = index + 1,
-                playerName = pair.first,
-                score = pair.second
-            )
-        }
 
     Box(
         contentAlignment = Alignment.Center,
@@ -174,31 +186,31 @@ fun LeaderboardCard(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-
-
-                LeaderboardList(entries = currentList)
-
+            if (entries.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No scores yet. Be the first!",
+                        fontSize = 20.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(vertical = 16.dp)
+                ) {
+                    items(entries) { entry ->
+                        LeaderboardRow(
+                            rank = entries.indexOf(entry) + 1,
+                            entry = entry
+                        )
+                    }
+                }
             }
-        }
-    }
-}
-
-/**
- * LazyColumn displaying leaderboard entries
- */
-@Composable
-fun LeaderboardList(entries: List<LeaderboardEntry>) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(vertical = 16.dp)
-    ) {
-        items(entries) { entry ->
-            LeaderboardRow(entry)
         }
     }
 }
@@ -207,7 +219,17 @@ fun LeaderboardList(entries: List<LeaderboardEntry>) {
  * A single leaderboard row (player rank, name, and score)
  */
 @Composable
-fun LeaderboardRow(entry: LeaderboardEntry) {
+fun LeaderboardRow(
+    rank: Int,
+    entry: LeaderboardEntry
+) {
+    val medalColor = when (rank) {
+        1 -> Color(0xFFFFD700) // Gold
+        2 -> Color(0xFFC0C0C0) // Silver
+        3 -> Color(0xFFCD7F32) // Bronze
+        else -> MaterialTheme.colorScheme.primary
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -217,14 +239,14 @@ fun LeaderboardRow(entry: LeaderboardEntry) {
     ) {
         // Display Player Rank
         Text(
-            text = "#${entry.rank}",
+            text = "#${rank}",
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
         // Display Player Name
         Text(
-            text = entry.playerName,
+            text = entry.displayName,
             fontSize = 20.sp,
             color = MaterialTheme.colorScheme.onPrimaryContainer,
             modifier = Modifier
