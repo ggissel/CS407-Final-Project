@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +20,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -27,13 +30,16 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,6 +50,7 @@ import com.cs407.whaap_it.R
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.cs407.whaap_it.ui.viewModels.SettingsViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cs407.whaap_it.ui.viewModels.SettingsViewModelFactory
 import com.cs407.whaap_it.util.SoundManager
 
 /**
@@ -51,9 +58,12 @@ import com.cs407.whaap_it.util.SoundManager
  */
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = viewModel(),
     onNavigateToHome: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val viewModel: SettingsViewModel = viewModel(
+        factory = SettingsViewModelFactory(context)
+    )
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -64,29 +74,34 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = MaterialTheme.colorScheme.primary)
-                .padding(vertical = 16.dp)
+                .padding(vertical = 16.dp),
         ) {
             IconButton(onClick = {
                 SoundManager.playButtonClick() // Play button click sound
                 onNavigateToHome()
-            }) {
-                Icon(
-                    Icons.Default.ArrowBack,
-                    contentDescription = "Back to Home",
-                    tint = Color.White
-                )
-            }
+            },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary)) {
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = "Back to Home",
+                        tint = Color.White
+                    )
+                }
 
             // Header Title
             Box(
                 modifier = Modifier
-                    .weight(1f),
+                    .weight(1f)
+                    .wrapContentWidth(Alignment.CenterHorizontally)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = stringResource(id = R.string.settings_page_title),
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineLarge,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
@@ -96,7 +111,7 @@ fun SettingsScreen(
         }
 
 
-        Cardfolio(viewModel)
+        Cardfolio(viewModel = viewModel)
     }
 
 }
@@ -117,9 +132,9 @@ fun SettingsScreenPreview() {
  */
 @Composable
 fun Cardfolio(
-    viewModel: SettingsViewModel = viewModel()
+    viewModel: SettingsViewModel
 ) {
-    var settings by viewModel.settingsState
+    val settings by viewModel.settingsState.collectAsState()
     val gameplaySettings = listOf(
         SettingItem.ToggleItem(
             title = "Shake Feature",
@@ -227,7 +242,9 @@ fun Cardfolio(
                             selected = index == selectedTabIndex,
                             onClick = { selectedTabIndex = index },
                             text = {
-                                Text(text = item.title)
+                                Text(
+                                    text = item.title,
+                                    style = MaterialTheme.typography.titleMedium)
                             }
                         )
                     }

@@ -47,15 +47,8 @@ import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cs407.whaap_it.ui.screen.TiledLogoBackground
 import com.cs407.whaap_it.R
-import com.cs407.whaap_it.auth.saveHighscore
-import com.cs407.whaap_it.ui.viewModels.LeaderboardViewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-
 
 // How many actions performed before the next difficulty level
 private const val ACTIONS_BEFORE_FAST = 10
@@ -857,8 +850,8 @@ fun GameArea(
 
 @Composable
 fun GameScreen(
-    leaderboardViewModel: LeaderboardViewModel,
-    onNavigateToHome: () -> Unit
+    navController: NavController? = null,
+    onNavigateToHome: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var gameState by remember { mutableStateOf(GameState()) }
@@ -981,11 +974,6 @@ fun GameScreen(
     }
 
     if (!gameState.isGameActive) {
-
-        val finalScore = gameState.score
-
-        leaderboardViewModel.updateScore(finalScore)
-
         AlertDialog(
             onDismissRequest = {/* Don't allow dismiss by clicking outside */},
             title = { Text("Game Over!") },

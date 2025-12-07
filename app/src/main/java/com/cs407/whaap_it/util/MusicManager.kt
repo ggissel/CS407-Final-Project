@@ -1,18 +1,44 @@
 package com.cs407.whaap_it.util
 
 import android.content.Context
+import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
+import android.util.Log
 import com.cs407.whaap_it.R
 
 object MusicManager {
 
     private var mediaPlayer: MediaPlayer? = null
+    private var musicVolume: Float = 1f
+    private var isMusicEnabled: Boolean = true
+
+    fun setMusicVolume(volume: Float) {
+        musicVolume = volume.coerceIn(0f, 1f)
+        mediaPlayer?.setVolume(musicVolume, musicVolume)
+    }
+
+    fun setMusicEnabled(enabled: Boolean) {
+        isMusicEnabled = enabled
+    }
 
     //Menu Music Functions
     fun startMenuMusic(context: Context) {
+        if (!isMusicEnabled) return
+
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer.create(context, R.raw.stolen_menu_theme)
-            mediaPlayer?.isLooping = true
+            mediaPlayer?.apply {
+                isLooping = true
+                setVolume(musicVolume, musicVolume)
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(AudioAttributes.USAGE_GAME)
+                        .build()
+                )
+            }
+            requestAudioFocus(context)
         }
 
         if (mediaPlayer?.isPlaying == false) {
@@ -32,9 +58,21 @@ object MusicManager {
 
     //Gameplay music Functions
     fun startGameplayMusic(context: Context) {
+        if (!isMusicEnabled) return
+
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer.create(context, R.raw.stolen_gameplay_song)
-            mediaPlayer?.isLooping = true
+            mediaPlayer?.apply {
+                isLooping = true
+                setVolume(musicVolume, musicVolume)
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(AudioAttributes.USAGE_GAME)
+                        .build()
+                )
+            }
+            requestAudioFocus(context)
         }
 
         if (mediaPlayer?.isPlaying == false) {
@@ -43,6 +81,8 @@ object MusicManager {
     }
 
     fun resumeGameplayMusic() {
+        if (!isMusicEnabled) return
+
         mediaPlayer?.start()
     }
     fun pauseGameplayMusic() {
@@ -53,5 +93,27 @@ object MusicManager {
         mediaPlayer?.stop()
         mediaPlayer?.release()
         mediaPlayer = null
+    }
+
+    private fun requestAudioFocus(context: Context) {
+        try {
+            val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+            @Suppress("DEPRECATION")
+            val result = audioManager.requestAudioFocus(
+                { focusChange ->
+                    // Ignore audio focus changes - keep music playing during microphone use
+                    Log.d("MusicManager", "Audio focus changed: $focusChange - ignoring")
+                },
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            )
+
+            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                Log.d("MusicManager", "Audio focus granted - music will keep playing")
+            }
+        } catch (e: Exception) {
+            Log.e("MusicManager", "Error requesting audio focus", e)
+        }
     }
 }

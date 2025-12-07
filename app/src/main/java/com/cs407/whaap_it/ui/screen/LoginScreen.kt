@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -189,13 +190,14 @@ private fun LoginTopBar(onNavigateBack: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = MaterialTheme.colorScheme.primary)
             .padding(vertical = 16.dp)
     ) {
         IconButton(onClick = {
             SoundManager.playButtonClick()
             onNavigateBack()
-        }) {
+        },
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary)) {
             Icon(
                 Icons.Default.ArrowBack,
                 contentDescription = "Back to Home",
@@ -204,12 +206,17 @@ private fun LoginTopBar(onNavigateBack: () -> Unit) {
         }
 
         Box(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .wrapContentWidth(Alignment.CenterHorizontally)
+                .clip(RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.primary)
+                .padding(8.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "Login/Sign Up",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineLarge,
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )
