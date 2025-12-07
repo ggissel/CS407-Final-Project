@@ -48,6 +48,8 @@ object SoundManager {
 
     private var shakeItSound: Int = 0
 
+    private var spinItSound: Int = 0
+
     fun init(context: Context) {
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_GAME)
@@ -87,6 +89,8 @@ object SoundManager {
         shoutItSound = soundPool.load(context, R.raw.shout_it, 1)
 
         shakeItSound = soundPool.load(context, R.raw.shake_it, 1)
+
+        spinItSound = soundPool.load(context, R.raw.spin_it, 1)
 
 
         // Load saved volume settings
@@ -166,6 +170,10 @@ object SoundManager {
 
     fun playShakeIt(){
         soundPool.play(shakeItSound, appVolume, appVolume, 1, 0, 1f)
+    }
+
+    fun playSpinIt(){
+        soundPool.play(spinItSound, appVolume, appVolume, 1, 0, 1f)
     }
     fun release() {
         soundPool.release()
