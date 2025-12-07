@@ -53,7 +53,7 @@ data class LeaderboardEntry(
  */
 @Composable
 fun LeaderboardScreen(
-    viewModel: LeaderboardViewModel = viewModel(),
+    viewModel: LeaderboardViewModel,
     onNavigateToHome: () -> Unit = {}
 ) {
     Column(
@@ -97,59 +97,27 @@ fun LeaderboardScreen(
             Spacer(modifier = Modifier.size(48.dp))  // same width as IconButton for symmetry
         }
 
-        LeaderboardCard(viewModel)
+        val leaderboardState by viewModel.leaderboardState
+        val currentList = leaderboardState.leaderboard
+            .mapIndexed { index, pair ->
+                LeaderboardEntry(index + 1, pair.first, pair.second)
+            }
+
+        LeaderboardCard(entries = currentList)
+
+
     }
 }
 
-/**
- * Use this to preview the LeaderboardScreen()
- */
-@Preview(showBackground = true)
-@Composable
-fun LeaderboardScreenPreview() {
-    WhaapitTheme {
-        LeaderboardScreen()
-    }
-}
+
 
 /**
  * Card displaying the tabbed leaderboard content
  */
 @Composable
 fun LeaderboardCard(
-    viewModel: LeaderboardViewModel = viewModel()
+    entries: List<LeaderboardEntry>
 ) {
-
-    val leaderboardState by viewModel.leaderboardState
-
-    // For adding tabs (maybe)
-    // val tabItems = listOf("Local","Global")
-    // var selectedTabIndex by remember { mutableIntStateOf(0) }
-
-    viewModel.addScore("person1", 70)
-    viewModel.addScore("person2", 65)
-    viewModel.addScore("person3", 60)
-    viewModel.addScore("person4", 55)
-    viewModel.addScore("person5", 50)
-    viewModel.addScore("person6", 45)
-    viewModel.addScore("person7", 40)
-    viewModel.addScore("person8", 35)
-    viewModel.addScore("person9", 30)
-    viewModel.addScore("person10", 30)
-    viewModel.addScore("person11", 25)
-    viewModel.addScore("person12", 20)
-    viewModel.addScore("person13", 15)
-    viewModel.addScore("person14", 10)
-    viewModel.addScore("person15", 5)
-
-    val currentList = leaderboardState.leaderboard
-        .mapIndexed { index, pair ->
-            LeaderboardEntry(
-                rank = index + 1,
-                playerName = pair.first,
-                score = pair.second
-            )
-        }
 
     Box(
         contentAlignment = Alignment.Center,
@@ -172,7 +140,7 @@ fun LeaderboardCard(
             ) {
 
 
-                LeaderboardList(entries = currentList)
+                LeaderboardList(entries)
 
             }
         }

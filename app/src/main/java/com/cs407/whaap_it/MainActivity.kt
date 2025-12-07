@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -50,6 +51,7 @@ import com.cs407.whaap_it.ui.screen.SettingsScreen
 import com.cs407.whaap_it.ui.screen.LeaderboardScreen
 import com.cs407.whaap_it.ui.screen.GameScreen
 import com.cs407.whaap_it.ui.theme.WhaapitTheme
+import com.cs407.whaap_it.ui.viewModels.LeaderboardViewModel
 import com.cs407.whaap_it.util.SoundManager
 import com.google.firebase.auth.FirebaseAuth
 import com.cs407.whaap_it.util.MusicManager
@@ -90,6 +92,9 @@ fun AppNavigation(
     val navController = rememberNavController()
     var currentUser by remember { mutableStateOf<UserState?>(null) }
     val auth = FirebaseAuth.getInstance()
+
+    // Create LeaderboardViewModel once here
+    val leaderboardViewModel: LeaderboardViewModel = viewModel()
 
     // Check if user is already logged in
     if (auth.currentUser != null) {
@@ -160,6 +165,7 @@ fun AppNavigation(
 
             composable("game") {
                 GameScreen(
+                    leaderboardViewModel = leaderboardViewModel,
                     onNavigateToHome = {
                         navController.navigate("home")
                     }
@@ -174,6 +180,7 @@ fun AppNavigation(
 
             composable("Leaderboard") {
                 LeaderboardScreen(
+                    viewModel = leaderboardViewModel,
                     onNavigateToHome = { navController.navigate("home") }
                 )
             }

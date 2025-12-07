@@ -1,11 +1,48 @@
 package com.cs407.whaap_it.auth
 
+import android.annotation.SuppressLint
 import android.content.ContentValues.TAG
 import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+
+/**
+ * Highscore Helper
+ * Contains all business logic for Firestore highscore storage
+ */
+
+@SuppressLint("StaticFieldLeak")
+private val firestore = FirebaseFirestore.getInstance()
+private val usersCollection = firestore.collection("users")
+private const val DEFAULT_USER_ID = "default_user"
+
+
+fun saveHighscore(uid: String, name: String, score: Int, onComplete: (Boolean) -> Unit) {
+    usersCollection.document(uid)
+        .set(
+            mapOf(
+                "displayName" to name,
+                "highscore" to score
+            ), SetOptions.merge()
+        )
+        .addOnSuccessListener { onComplete(true) }
+        .addOnFailureListener { onComplete(false) }
+}
+
+
+fun getHighscore(uid: String, onResult: (Int) -> Unit) {
+    usersCollection.document(uid)
+        .get()
+        .addOnSuccessListener { doc ->
+            val score = doc.getLong("highscore")?.toInt() ?: 0
+            onResult(score)
+        }
+        .addOnFailureListener { onResult(0) }
+}
 
 /**
  * Authentication Helper
