@@ -18,6 +18,8 @@ class SettingsDataStore(private val context: Context) {
 
         val USE_MICROPHONE = booleanPreferencesKey("use_microphone")
 
+        val ENABLE_SHAKE = booleanPreferencesKey("enable_shake")
+
         // Default app setting values
         private const val DEFAULT_ENABLE_MUSIC = true
         private const val DEFAULT_MUSIC_VOLUME = 0.5f
@@ -26,6 +28,8 @@ class SettingsDataStore(private val context: Context) {
 
         // Default game setting values
         private const val DEFAULT_USE_MICROPHONE = true
+
+        private const val DEFAULT_ENABLE_SHAKE = true
 
     }
 
@@ -52,6 +56,11 @@ class SettingsDataStore(private val context: Context) {
     val useMicrophone: Flow<Boolean> = context.settingsDataStore.data
         .map { preferences ->
             preferences[USE_MICROPHONE] ?: DEFAULT_USE_MICROPHONE
+        }
+
+    val enableShake: Flow<Boolean> = context.settingsDataStore.data
+        .map { preferences ->
+            preferences[ENABLE_SHAKE] ?: DEFAULT_ENABLE_SHAKE
         }
 
     suspend fun setEnableMusic(enable: Boolean) {
@@ -81,6 +90,12 @@ class SettingsDataStore(private val context: Context) {
     suspend fun setUseMicrophone(enabled: Boolean) {
         context.settingsDataStore.edit { preferences ->
             preferences[USE_MICROPHONE] = enabled
+        }
+    }
+
+    suspend fun setEnableShake(enabled: Boolean) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[ENABLE_SHAKE] = enabled
         }
     }
 }

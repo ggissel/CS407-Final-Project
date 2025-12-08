@@ -53,9 +53,9 @@ class SettingsViewModel(
                 settingsDataStore.enableMusic,
                 settingsDataStore.musicVolume,
                 settingsDataStore.appVolume,
-                settingsDataStore.groovyMode,
                 settingsDataStore.useMicrophone,
-            ) { enableMusic, musicVolume, appVolume, groovyMode, useMicrophone ->
+                settingsDataStore.enableShake,
+            ) { enableMusic, musicVolume, appVolume, useMicrophone, enableShake ->
 
                 MusicManager.setMusicEnabled(enableMusic)
                 MusicManager.setMusicVolume(musicVolume)
@@ -65,8 +65,8 @@ class SettingsViewModel(
                     enableMusic = enableMusic,
                     musicVolume = musicVolume,
                     appVolume = appVolume,
-                    groovyMode = groovyMode,
-                    useMicrophone = useMicrophone
+                    useMicrophone = useMicrophone,
+                    enableShake = enableShake
                 )
             }.collect { newState ->
                 _settingsState.value = newState
@@ -104,6 +104,9 @@ class SettingsViewModel(
     }
 
     fun toggleShake(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsDataStore.setEnableShake(enabled)  // Use the correct function
+        }
         _settingsState.value = _settingsState.value.copy(enableShake = enabled)
     }
 
