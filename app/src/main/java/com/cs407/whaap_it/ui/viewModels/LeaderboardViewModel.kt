@@ -44,10 +44,11 @@ class LeaderboardViewModel : ViewModel() {
         }
     }
 
-    fun submitScore(score: Int) {
+    fun submitScore(score: Int, onResult: (Boolean, Boolean) -> Unit = { _, _ -> }) {
         val currentUser = auth.currentUser
         if (currentUser == null) {
             // Guest mode, not needed,
+            onResult(false, false)
             return
         }
 
@@ -63,6 +64,9 @@ class LeaderboardViewModel : ViewModel() {
             if (success) {
                 // Refresh leaderboard after successful submission
                 loadLeaderboard()
+                onResult(true, true)
+            } else {
+                onResult(false, false)
             }
         }
     }

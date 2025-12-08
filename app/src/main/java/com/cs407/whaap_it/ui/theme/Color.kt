@@ -12,3 +12,7 @@ val Pink40 = Color(0xFF7D5260)
 
 val LogoColor = Color(0xFF00A2E8)
 
+val SecondaryColor = Color(0xFFFE9F3E)
+
+val TertiaryColor = Color(0xFFFF4500)
+

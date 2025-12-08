@@ -13,12 +13,21 @@ object LeaderboardRepository {
 
     suspend fun submitScore(entry: LeaderboardEntry): Boolean {
         return try {
-            // Use userId as document ID to prevent duplicates
-            leaderboardCollection.document(entry.userId)
-                .set(entry)
-                .await()
-            Log.d(TAG, "Score submitted successfully for user: ${entry.displayName}")
-            true
+            // Check Firestore database if user has a score on leaderboard
+            val existingEntry = getUserScore(entry.userId)
+
+            // If no existing score OR new score is higher, update the Firestore
+            if (existingEntry == null || entry.score > existingEntry.score) {
+                leaderboardCollection.document(entry.userId)
+                    .set(entry)
+                    .await()
+                Log.d(TAG, "Score updated for user: ${entry.displayName} - New score: ${entry.score}")
+                true
+            } else {
+                // New score is not higher, don't update
+                Log.d(TAG, "Score not updated for user: ${entry.displayName} - Existing score: ${existingEntry.score} is higher than new score: ${entry.score}")
+                false
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to submit score: ${e.message}")
             false

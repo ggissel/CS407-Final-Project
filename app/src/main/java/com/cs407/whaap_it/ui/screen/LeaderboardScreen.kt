@@ -46,6 +46,9 @@ import com.cs407.whaap_it.ui.theme.WhaapitTheme
 import com.cs407.whaap_it.ui.viewModels.LeaderboardViewModel
 import com.cs407.whaap_it.util.SoundManager
 import com.cs407.whaap_it.data.LeaderboardEntry
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Leaderboard main entry
@@ -242,17 +245,28 @@ fun LeaderboardRow(
             text = "#${rank}",
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = if (rank <= 4) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
         )
-        // Display Player Name
-        Text(
-            text = entry.displayName,
-            fontSize = 20.sp,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
+        // Display Player Name & Timestamp
+        Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(start = 24.dp)
-        )
+                .padding(6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Text(
+                text = entry.displayName,
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+            Text(
+                text = SimpleDateFormat("hh:mm a | MMM d, yyyy", Locale.getDefault())
+                    .format(entry.timestamp.toDate()),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.inversePrimary,
+            )
+        }
         // Display Player Score
         Text(
             text = entry.score.toString(),

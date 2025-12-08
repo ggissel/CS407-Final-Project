@@ -1203,9 +1203,17 @@ fun GameScreen(
     }
 
     if (!gameState.isGameActive) {
+        var isNewHighScore by remember { mutableStateOf(false) }
+
         if (gameState.score > 0) {
             LaunchedEffect(gameState.score) {
-                leaderboardViewModel.submitScore(gameState.score)
+                leaderboardViewModel.submitScore(gameState.score) { submitted, wasHighScore ->
+                    if (submitted && wasHighScore) {
+                        isNewHighScore = true
+                    } else {
+                        isNewHighScore = false
+                    }
+                }
             }
         }
 
@@ -1215,8 +1223,9 @@ fun GameScreen(
                 "Game Over",
                 style = MaterialTheme.typography.labelLarge
             ) },
-            text = { Text(
-                "Final Score: ${gameState.score}",
+            text = {
+                Text(
+                if (isNewHighScore) "New High Score! ${gameState.score}" else "Final Score: ${gameState.score}",
                 style = MaterialTheme.typography.labelMedium
             ) },
             confirmButton = {
