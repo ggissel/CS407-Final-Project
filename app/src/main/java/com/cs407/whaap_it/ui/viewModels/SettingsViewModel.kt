@@ -57,6 +57,8 @@ class SettingsViewModel(
                 settingsDataStore.enableShake,
             ) { enableMusic, musicVolume, appVolume, useMicrophone, enableShake ->
 
+                val currentState = _settingsState.value
+
                 MusicManager.setMusicEnabled(enableMusic)
                 MusicManager.setMusicVolume(musicVolume)
                 SoundManager.setAppVolume(appVolume)
@@ -66,7 +68,14 @@ class SettingsViewModel(
                     musicVolume = musicVolume,
                     appVolume = appVolume,
                     useMicrophone = useMicrophone,
-                    enableShake = enableShake
+                    enableShake = enableShake,
+                    enableFlip = currentState.enableFlip,
+                    hapticFeedback = currentState.hapticFeedback,
+                    pinchGesture = currentState.pinchGesture,
+                    swipeGesture = currentState.swipeGesture,
+                    doubleTap = currentState.doubleTap,
+                    longPress = currentState.longPress,
+                    groovyMode = currentState.groovyMode
                 )
             }.collect { newState ->
                 _settingsState.value = newState
@@ -81,6 +90,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             settingsDataStore.setUseMicrophone(enabled)
         }
+        _settingsState.value = _settingsState.value.copy(useMicrophone = enabled)
     }
 
     fun toggleHaptic(enabled: Boolean) {
@@ -105,7 +115,7 @@ class SettingsViewModel(
 
     fun toggleShake(enabled: Boolean) {
         viewModelScope.launch {
-            settingsDataStore.setEnableShake(enabled)  // Use the correct function
+            settingsDataStore.setEnableShake(enabled)
         }
         _settingsState.value = _settingsState.value.copy(enableShake = enabled)
     }
