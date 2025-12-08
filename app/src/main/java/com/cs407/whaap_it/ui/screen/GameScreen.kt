@@ -133,8 +133,8 @@ enum class GameAction(val displayName: String, val points: Int, val playSound: (
 /**
  * Random action generator. Returns a random Game Action.
  */
-private fun generateRandomAction(allowShout: Boolean = true): GameAction {
-    return if (allowShout) {
+private fun generateRandomAction(allowShout: Boolean, allowShake: Boolean): GameAction {
+    return if (allowShout && allowShake) {
         when (Random.nextInt(5)) {
             0 -> GameAction.WHAAP
             1 -> GameAction.PULL
@@ -142,12 +142,25 @@ private fun generateRandomAction(allowShout: Boolean = true): GameAction {
             3 -> GameAction.SHAKE
             else -> GameAction.TWIST
         }
-    } else {
+    } else if (!allowShout && allowShake){
         // Only generate WHAAP, PULL, or TWIST when microphone is disabled
         when (Random.nextInt(4)) {
             0 -> GameAction.WHAAP
             1 -> GameAction.PULL
             2 -> GameAction.SHAKE
+            else -> GameAction.TWIST
+        }
+    } else if (allowShout) {
+        when (Random.nextInt(4)) {
+            0 -> GameAction.WHAAP
+            1 -> GameAction.PULL
+            2 -> GameAction.SHOUT
+            else -> GameAction.TWIST
+        }
+    } else {
+        when (Random.nextInt(3)) {
+            0 -> GameAction.WHAAP
+            1 -> GameAction.PULL
             else -> GameAction.TWIST
         }
     }
@@ -156,15 +169,15 @@ private fun generateRandomAction(allowShout: Boolean = true): GameAction {
 /**
  * Generates first 10 Game Actions of a game session
  */
-private fun generateInitialActions(allowShout: Boolean = true): List<GameAction> {
-    return List(10) { generateRandomAction(allowShout) }
+private fun generateInitialActions(allowShout: Boolean, allowShake: Boolean): List<GameAction> {
+    return List(10) { generateRandomAction(allowShout, allowShake) }
 }
 
 /**
  * Used to initiate the start of a game. Initializes the game state.
  */
-private fun startGame(allowShout: Boolean, onStateUpdate: (GameState) -> Unit) {
-    val actions = generateInitialActions(allowShout)
+private fun startGame(allowShout: Boolean, allowShake: Boolean, onStateUpdate: (GameState) -> Unit) {
+    val actions = generateInitialActions(allowShout, allowShake)
     // Find the first non-SHOUT action if microphone is disabled
     val firstAction = if (allowShout) {
         actions.firstOrNull()
@@ -193,7 +206,7 @@ private fun startGame(allowShout: Boolean, onStateUpdate: (GameState) -> Unit) {
  * Gets the next game action from the generated list of actions. If there are no more actions left,
  * this function ends the game
  */
-private fun nextAction(currentState: GameState, allowShout: Boolean, onStateUpdate: (GameState) -> Unit) {
+private fun nextAction(currentState: GameState, allowShout: Boolean, allowShake: Boolean, onStateUpdate: (GameState) -> Unit) {
     if (currentState.totalTimeRemaining <= 0) {
         onStateUpdate(currentState.copy(isGameActive = false, currentAction = null))
         return
@@ -204,7 +217,7 @@ private fun nextAction(currentState: GameState, allowShout: Boolean, onStateUpda
     var nextAction = nextActions.getOrNull(nextIndex)
 
     if (nextIndex >= nextActions.size) {
-        val newActions = List(5) { generateRandomAction(allowShout) }
+        val newActions = List(5) { generateRandomAction(allowShout, allowShake) }
         nextActions = nextActions + newActions
         nextAction = nextActions.getOrNull(nextIndex)
     }
@@ -225,6 +238,28 @@ private fun nextAction(currentState: GameState, allowShout: Boolean, onStateUpda
                 actions = nextActions
             ),
             allowShout,
+            allowShake,
+            onStateUpdate
+        )
+        return
+    }
+
+    if (nextAction == GameAction.SHAKE && !allowShake) {
+        Log.d("GameScreen", "Skipping SHAKE action - shake disabled")
+        // Move to the next action instead by calling nextAction recursively
+        onStateUpdate(
+            currentState.copy(
+                currentActionIndex = nextIndex,
+                actions = nextActions
+            )
+        )
+        nextAction(
+            currentState.copy(
+                currentActionIndex = nextIndex,
+                actions = nextActions
+            ),
+            allowShout,
+            allowShake,
             onStateUpdate
         )
         return
@@ -839,7 +874,7 @@ fun GameHeader(
 fun GameArea(
     gameState: GameState,
     onActionPerformed: (GameAction) -> Unit,
-    hasMicPermission: Boolean = true,
+    hasMicPermission: Boolean,
     debugMessage: String = ""
 ) {
     val currentAction = gameState.currentAction
@@ -995,6 +1030,7 @@ fun GameScreen(
 
     val settingsDataStore = remember { com.cs407.whaap_it.data.SettingsDataStore(context) }
     val useMicrophone by settingsDataStore.useMicrophone.collectAsState(initial = true)
+    val enableShake by settingsDataStore.enableShake.collectAsState(initial = true)
 
     LaunchedEffect(Unit) {
         VoiceRecognitionManager.initialize(context)
@@ -1007,7 +1043,8 @@ fun GameScreen(
             !gameState.isInCountdown &&
             !gameState.isInActionGap &&
             !gameState.isInIntermission &&
-            gameState.currentAction == GameAction.SHAKE
+            gameState.currentAction == GameAction.SHAKE &&
+            enableShake
         ) {
             ShakeDetector.startListening(context) {
                 // Trigger only if still in SHAKE action
@@ -1118,7 +1155,7 @@ fun GameScreen(
             if (gameState.isInIntermission && !gameState.isPaused) {
                 gameState = gameState.copy(isInIntermission = false)
                 SoundManager.playButtonClick()
-                nextAction(gameState, useMicrophone) { newState -> gameState = newState }
+                nextAction(gameState, useMicrophone, enableShake) { newState -> gameState = newState }
             }
         }
     }
@@ -1138,7 +1175,7 @@ fun GameScreen(
 
                     if (newGapTime <= 0) {
                         gameState = gameState.copy(isInActionGap = false)
-                        nextAction(gameState, useMicrophone) { newState -> gameState = newState }
+                        nextAction(gameState, useMicrophone, enableShake) { newState -> gameState = newState }
                     }
                 } else {
                     gameState = gameState.copy(
@@ -1163,7 +1200,18 @@ fun GameScreen(
 
     LaunchedEffect(useMicrophone) {
         if (!gameState.isGameActive && gameState.currentAction == null) {
-            startGame(useMicrophone) { newState -> gameState = newState.copy(
+            startGame(useMicrophone, enableShake) { newState -> gameState = newState.copy(
+                countdown = 3,
+                isInCountdown = true,
+                isPaused = false
+            ) }
+            MusicManager.startGameplayMusic(context)
+        }
+    }
+
+    LaunchedEffect(enableShake) {
+        if (!gameState.isGameActive && gameState.currentAction == null) {
+            startGame(useMicrophone, enableShake) { newState -> gameState = newState.copy(
                 countdown = 3,
                 isInCountdown = true,
                 isPaused = false
@@ -1232,7 +1280,7 @@ fun GameScreen(
                 Button(
                     onClick = {
                         MusicManager.startGameplayMusic(context)
-                        startGame(useMicrophone) { newState -> gameState = newState.copy(
+                        startGame(useMicrophone, enableShake) { newState -> gameState = newState.copy(
                             countdown = 3,
                             isInCountdown = true,
                             isPaused = false
