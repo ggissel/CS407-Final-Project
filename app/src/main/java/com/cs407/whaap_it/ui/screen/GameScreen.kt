@@ -178,11 +178,14 @@ private fun generateInitialActions(allowShout: Boolean, allowShake: Boolean): Li
  */
 private fun startGame(allowShout: Boolean, allowShake: Boolean, onStateUpdate: (GameState) -> Unit) {
     val actions = generateInitialActions(allowShout, allowShake)
-    // Find the first non-SHOUT action if microphone is disabled
-    val firstAction = if (allowShout) {
-        actions.firstOrNull()
-    } else {
-        actions.firstOrNull { it != GameAction.SHOUT }
+    // Find the first non-SHOUT/non-SHAKE action if microphone/shake is disabled
+    val firstAction = actions.firstOrNull { action ->
+        when {
+            !allowShout && action == GameAction.SHOUT -> false  // Skip if SHOUT not allowed
+            !allowShake && action == GameAction.SHAKE -> false  // Skip if SHAKE not allowed
+            !allowShake && !allowShout && (action == GameAction.SHOUT || action == GameAction.SHAKE) -> false
+            else -> true  // Action is allowed
+        }
     }
 
     val initialTime = firstAction?.customActionTime ?: 3f
@@ -1198,18 +1201,7 @@ fun GameScreen(
         }
     }
 
-    LaunchedEffect(useMicrophone) {
-        if (!gameState.isGameActive && gameState.currentAction == null) {
-            startGame(useMicrophone, enableShake) { newState -> gameState = newState.copy(
-                countdown = 3,
-                isInCountdown = true,
-                isPaused = false
-            ) }
-            MusicManager.startGameplayMusic(context)
-        }
-    }
-
-    LaunchedEffect(enableShake) {
+    LaunchedEffect(useMicrophone, enableShake) {
         if (!gameState.isGameActive && gameState.currentAction == null) {
             startGame(useMicrophone, enableShake) { newState -> gameState = newState.copy(
                 countdown = 3,
