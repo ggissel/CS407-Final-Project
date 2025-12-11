@@ -1203,7 +1203,7 @@ fun GameScreen(
     }
 
     LaunchedEffect(useMicrophone, enableShake) {
-        delay(20)
+        delay(10)
 
         if (!gameState.isGameActive && gameState.currentAction == null) {
             startGame(useMicrophone, enableShake) { newState -> gameState = newState.copy(

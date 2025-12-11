@@ -141,16 +141,19 @@ fun Cardfolio(
             isChecked = settings.enableShake,
             onToggleChange = { enabled -> viewModel.toggleShake(enabled) }
         ),
+        /**
         SettingItem.ToggleItem(
             title = "Flip Feature",
             isChecked = settings.enableFlip,
             onToggleChange = { enabled -> viewModel.toggleFlip(enabled) }
         ),
+        **/
         SettingItem.ToggleItem(
             title = "Microphone",
             isChecked = settings.useMicrophone,
             onToggleChange = { enabled -> viewModel.toggleMic(enabled) }
         ),
+        /**
         SettingItem.ToggleItem(
             title = "Haptic Feedback",
             isChecked = settings.hapticFeedback,
@@ -176,6 +179,7 @@ fun Cardfolio(
             isChecked = settings.longPress,
             onToggleChange = { enabled -> viewModel.toggleLongPress(enabled) }
         ),
+        **/
     )
 
     val musicAudioSettings = listOf(
